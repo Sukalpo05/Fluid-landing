@@ -1,0 +1,659 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Fluid generates user-specific interfaces from a single schema. Ship one capability definition and let AI create the right UI for every user." />
+    <title>Fluid — Frontend personalization without frontend customization</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  </head>
+  <body class="dark bg-black">
+    <!-- Glow effects -->
+    <div class="glow-bg glow-hero"></div>
+    <div class="glow-bg glow-features"></div>
+
+    <!-- Header Navigation -->
+    <header class="header">
+      <div class="header-container">
+        <a href="#" class="logo">
+          <svg class="logo-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="url(#logo-grad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 17L12 22L22 17" stroke="url(#logo-grad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 12L12 17L22 12" stroke="url(#logo-grad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <defs>
+              <linearGradient id="logo-grad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#00DFD8" />
+                <stop offset="0.5" stop-color="#0072F5" />
+                <stop offset="1" stop-color="#7928CA" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <span class="logo-text">Fluid</span>
+        </a>
+        <nav class="nav-links">
+          <a href="#how-it-works" class="nav-link">How It Works</a>
+          <a href="#demo" class="nav-link">Interactive Demo</a>
+          <a href="#code-example" class="nav-link">Code</a>
+          <a href="#features" class="nav-link">Features</a>
+        </nav>
+        <div class="nav-actions">
+          <a href="#docs" class="btn btn-text">Docs</a>
+          <a href="#demo" class="btn btn-primary-nav">Start Building</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <!-- 1. Hero Section -->
+      <section id="hero" class="hero-section">
+        <div class="section-container hero-grid">
+          <div class="hero-info">
+            <div class="hero-tag">
+              <span class="badge-dot"></span>
+              <span class="badge-text">v1.2.0: Now with Edge Resolution</span>
+            </div>
+            <h1 class="hero-title">Frontend personalization without frontend customization.</h1>
+            <p class="hero-subtitle">Fluid generates user-specific interfaces from a single schema. Ship one capability definition and let AI create the right UI for every user.</p>
+            <div class="hero-actions">
+              <a href="#demo" class="btn btn-primary">Start Building</a>
+              <a href="#demo" class="btn btn-secondary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                View Demo
+              </a>
+            </div>
+          </div>
+          
+          <div class="hero-visual">
+            <div class="architecture-wrapper">
+              <div class="card-header-bar">
+                <span class="window-dot"></span>
+                <span class="window-dot"></span>
+                <span class="window-dot"></span>
+                <span class="window-title">fluid-compiler-flow</span>
+              </div>
+              <div class="architecture-canvas">
+                <!-- Node: Schema -->
+                <div class="arch-node" id="node-schema">
+                  <div class="node-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                  </div>
+                  <div class="node-label">Schema</div>
+                </div>
+
+                <!-- Path 1 -->
+                <div class="arch-connector" id="conn-1">
+                  <div class="pulse-dot"></div>
+                </div>
+
+                <!-- Node: Intent -->
+                <div class="arch-node" id="node-intent">
+                  <div class="node-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                  </div>
+                  <div class="node-label">User Intent</div>
+                </div>
+
+                <!-- Path 2 -->
+                <div class="arch-connector" id="conn-2">
+                  <div class="pulse-dot"></div>
+                </div>
+
+                <!-- Node: AI Engine -->
+                <div class="arch-node" id="node-engine">
+                  <div class="node-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line></svg>
+                  </div>
+                  <div class="node-label">AI Engine</div>
+                </div>
+
+                <!-- Path 3 -->
+                <div class="arch-connector" id="conn-3">
+                  <div class="pulse-dot"></div>
+                </div>
+
+                <!-- Node: IR -->
+                <div class="arch-node" id="node-ir">
+                  <div class="node-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                  </div>
+                  <div class="node-label">Fluid IR</div>
+                </div>
+
+                <!-- Path 4 -->
+                <div class="arch-connector" id="conn-4">
+                  <div class="pulse-dot"></div>
+                </div>
+
+                <!-- Node: UI -->
+                <div class="arch-node" id="node-ui">
+                  <div class="node-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line><path d="M8 21h8"></path><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                  </div>
+                  <div class="node-label">Personalized UI</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Interactive Demo Section -->
+      <section id="demo" class="demo-section scroll-reveal">
+        <div class="section-container">
+          <div class="section-header">
+            <h2 class="section-title">See the Compiler in Action</h2>
+            <p class="section-desc">Select a core capability schema, specify context or user intent, and watch the AI engine compile and render a context-optimized interface in real-time.</p>
+          </div>
+
+          <div class="demo-workspace">
+            <!-- Workspace Left: Schema & Intent Controls -->
+            <div class="demo-panel demo-controls">
+              <div class="panel-header">
+                <span class="panel-title">1. INPUT CONFIGURATION</span>
+                <div class="preset-selector">
+                  <label for="schema-preset">Schema Preset:</label>
+                  <select id="schema-preset" class="custom-select">
+                    <option value="checkout">payment_gateway.json</option>
+                    <option value="dashboard">metrics_collector.json</option>
+                    <option value="feedback">user_engagement.json</option>
+                  </select>
+                </div>
+              </div>
+              <div class="panel-content">
+                <!-- Code Area (Schema) -->
+                <div class="code-editor-header">
+                  <span>Capability Schema (JSON)</span>
+                  <span class="badge-ts">TypeScript Compatible</span>
+                </div>
+                <div class="editor-container">
+                  <pre class="code-editor-display"><code id="schema-code-display" class="language-json"></code></pre>
+                </div>
+
+                <!-- Intent Input -->
+                <div class="intent-header">
+                  <span>User Intent & Context</span>
+                </div>
+                <div class="intent-selector-group">
+                  <button class="intent-btn active" data-intent="standard">
+                    <span class="intent-icon">💻</span>
+                    <span class="intent-name">Intent A: US Web Pro</span>
+                  </button>
+                  <button class="intent-btn" data-intent="mobile">
+                    <span class="intent-icon">📱</span>
+                    <span class="intent-name">Intent B: Tokyo Mobile</span>
+                  </button>
+                  <button class="intent-btn" data-intent="outage">
+                    <span class="intent-icon">🚨</span>
+                    <span class="intent-name">Intent C: Outage Mode</span>
+                  </button>
+                </div>
+                <p id="intent-description" class="intent-desc"></p>
+              </div>
+            </div>
+
+            <!-- Workspace Middle: Engine Compiler -->
+            <div class="demo-panel demo-compiler">
+              <div class="panel-header">
+                <span class="panel-title">2. ENGINE TRANSFORMATION</span>
+              </div>
+              <div class="panel-content compiler-logs">
+                <div class="log-item" id="log-step-1">
+                  <span class="log-bullet">●</span>
+                  <span class="log-text">Analyzing capability schema...</span>
+                  <span class="log-status">DONE</span>
+                </div>
+                <div class="log-item" id="log-step-2">
+                  <span class="log-bullet">●</span>
+                  <span class="log-text">Parsing intent payload...</span>
+                  <span class="log-status">DONE</span>
+                </div>
+                <div class="log-item" id="log-step-3">
+                  <span class="log-bullet">●</span>
+                  <span class="log-text">Resolving UI rulesets...</span>
+                  <span class="log-status">DONE</span>
+                </div>
+                <div class="log-item" id="log-step-4">
+                  <span class="log-bullet">●</span>
+                  <span class="log-text">Compiling Intermediate Rep (IR)...</span>
+                  <span class="log-status">DONE</span>
+                </div>
+                <div class="compiler-meter">
+                  <div class="meter-bar"></div>
+                </div>
+                <div class="ir-inspect-box">
+                  <div class="ir-box-header">Compiled IR Extract</div>
+                  <pre class="ir-box-code"><code id="compiled-ir-display"></code></pre>
+                </div>
+              </div>
+            </div>
+
+            <!-- Workspace Right: Preview -->
+            <div class="demo-panel demo-preview">
+              <div class="panel-header">
+                <span class="panel-title">3. PERSONALIZED OUTPUT UI</span>
+                <span class="preview-badge">LIVE RENDER</span>
+              </div>
+              <div class="panel-content preview-area">
+                <div class="device-mockup">
+                  <div class="device-screen" id="preview-viewport">
+                    <!-- Dynamic Component Rendered Here -->
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. Problem Section -->
+      <section id="problem" class="problem-section scroll-reveal">
+        <div class="section-container">
+          <div class="section-header">
+            <h2 class="section-title">The Personalization Dilemma</h2>
+            <p class="section-desc">Traditional frontend stacks require writing separate layouts or maintaining massive bundles of conditions to customize UI for different users. Fluid ends the code sprawl.</p>
+          </div>
+
+          <div class="problem-grid">
+            <div class="problem-card problem-card-legacy">
+              <div class="problem-card-status legacy-status">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-danger"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                <span>Traditional Architecture (Code Sprawl)</span>
+              </div>
+              <h3>Conditional Rendering Bloat</h3>
+              <p>Adding dynamic features means stuffing codebase with A/B testing flags, feature toggles, device checks, and localizations. The output? Heavy JS files, slow compile times, and spaghetti code.</p>
+              <div class="problem-code-visual">
+                <pre><code>// ❌ Legacy Frontend Conditional Rendering
+if (user.isMobile && user.geo === 'JP') {
+  return &lt;TokyoMobileCheckout methods={JP_PAYMENTS} /&gt;;
+} else if (user.plan === 'enterprise' && user.role === 'admin') {
+  return &lt;EnterpriseDesktopCheckout /&gt;;
+} else {
+  // 12 more conditions...
+}</code></pre>
+              </div>
+            </div>
+
+            <div class="problem-card problem-card-fluid">
+              <div class="problem-card-status fluid-status">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-success"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Fluid Architecture (Schema Driven)</span>
+              </div>
+              <h3>Single Declarative Schema</h3>
+              <p>Define what the interface is capable of doing once. Fluid handles the evaluation, constraints, and dynamic generation of the view layer at the edge. Clean client codebase with 0kb layout engine overhead.</p>
+              <div class="problem-code-visual">
+                <pre><code>//  Fluid Edge Architecture
+// One renderer, zero conditional bundle sprawl.
+&lt;FluidRenderer 
+  capability="checkout" 
+  context={userContext} 
+/&gt;</code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. How It Works Section -->
+      <section id="how-it-works" class="how-section scroll-reveal">
+        <div class="section-container">
+          <div class="section-header">
+            <h2 class="section-title">The Three-Step Cycle</h2>
+            <p class="section-desc">How Fluid delivers native-speed, custom layouts on-the-fly without running client-side LLMs.</p>
+          </div>
+
+          <div class="how-grid">
+            <div class="how-step">
+              <div class="step-num">01</div>
+              <h4>Define Capability</h4>
+              <p>Write a standard schema representing your business actions. Fields, actions, and validations are fully typed in TypeScript and uploaded to Fluid registry.</p>
+            </div>
+            <div class="how-step">
+              <div class="step-num">02</div>
+              <h4>Supply Context & Intent</h4>
+              <p>Send user device specifications, historical interactions, regional data, and explicit requests to our edge resolution nodes.</p>
+            </div>
+            <div class="how-step">
+              <div class="step-num">03</div>
+              <h4>Compile & Render</h4>
+              <p>The compiler evaluates rules, runs layout compilation, outputs a secure JSON-based IR, and your SDK paints the view instantly.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. Code Example Section -->
+      <section id="code-example" class="code-section scroll-reveal">
+        <div class="section-container">
+          <div class="section-header">
+            <h2 class="section-title">Minimal Integration. Maximum Control.</h2>
+            <p class="section-desc">Look under the hood at the schema declaration, the Intermediate Representation (IR), and client-side rendering.</p>
+          </div>
+
+          <div class="code-window">
+            <div class="code-window-header">
+              <div class="code-tabs">
+                <button class="code-tab-btn active" data-tab="schema-tab">schema.ts</button>
+                <button class="code-tab-btn" data-tab="ir-tab">fluid-ir.json</button>
+                <button class="code-tab-btn" data-tab="react-tab">App.tsx</button>
+              </div>
+              <div class="window-actions">
+                <span class="lang-label">Typescript</span>
+              </div>
+            </div>
+            <div class="code-window-body">
+              <!-- Tab 1: schema.ts -->
+              <pre id="code-schema-tab" class="code-block active"><code><span class="c-keyword">import</span> { defineCapability } <span class="c-keyword">from</span> <span class="c-string">"@fluid-ui/sdk"</span>;
+
+<span class="c-keyword">export const</span> feedbackForm = defineCapability({
+  id: <span class="c-string">"user-feedback"</span>,
+  version: <span class="c-string">"1.2.0"</span>,
+  fields: {
+    rating: { type: <span class="c-string">"integer"</span>, min: 1, max: 5, required: <span class="c-keyword">true</span> },
+    message: { type: <span class="c-string">"string"</span>, required: <span class="c-keyword">true</span> },
+    email: { type: <span class="c-string">"email"</span>, required: <span class="c-keyword">false</span> }
+  },
+  actions: {
+    submit: {
+      endpoint: <span class="c-string">"/api/feedback"</span>,
+      method: <span class="c-string">"POST"</span>
+    }
+  }
+});</code></pre>
+
+              <!-- Tab 2: fluid-ir.json -->
+              <pre id="code-ir-tab" class="code-block"><code>{
+  <span class="c-key">"$schema"</span>: <span class="c-string">"https://fluid.dev/ir/v1.json"</span>,
+  <span class="c-key">"id"</span>: <span class="c-string">"user-feedback"</span>,
+  <span class="c-key">"layout"</span>: {
+    <span class="c-key">"style"</span>: <span class="c-string">"glassmorphic"</span>,
+    <span class="c-key">"spacing"</span>: <span class="c-string">"compact"</span>
+  },
+  <span class="c-key">"components"</span>: [
+    {
+      <span class="c-key">"type"</span>: <span class="c-string">"header"</span>,
+      <span class="c-key">"props"</span>: { <span class="c-key">"title"</span>: <span class="c-string">"Outage Feedback"</span>, <span class="c-key">"alert"</span>: <span class="c-keyword">true</span> }
+    },
+    {
+      <span class="c-key">"type"</span>: <span class="c-string">"stars-selector"</span>,
+      <span class="c-key">"binding"</span>: <span class="c-string">"rating"</span>,
+      <span class="c-key">"props"</span>: { <span class="c-key">"label"</span>: <span class="c-string">"Rate your outage experience"</span> }
+    },
+    {
+      <span class="c-key">"type"</span>: <span class="c-string">"textarea"</span>,
+      <span class="c-key">"binding"</span>: <span class="c-string">"message"</span>,
+      <span class="c-key">"props"</span>: { <span class="c-key">"placeholder"</span>: <span class="c-string">"What went wrong?"</span> }
+    },
+    {
+      <span class="c-key">"type"</span>: <span class="c-string">"submit-btn"</span>,
+      <span class="c-key">"action"</span>: <span class="c-string">"submit"</span>,
+      <span class="c-key">"props"</span>: { <span class="c-key">"variant"</span>: <span class="c-string">"danger"</span>, <span class="c-key">"text"</span>: <span class="c-string">"Escalate Feedback"</span> }
+    }
+  ]
+}</code></pre>
+
+              <!-- Tab 3: App.tsx -->
+              <pre id="code-react-tab" class="code-block"><code><span class="c-keyword">import</span> { FluidRenderer, useFluid } <span class="c-keyword">from</span> <span class="c-string">"@fluid-ui/react"</span>;
+
+<span class="c-keyword">export default function</span> App() {
+  <span class="c-comment">// Instantly fetches compiled IR and handles action execution securely</span>
+  <span class="c-keyword">const</span> { ir, loading, executeAction } = useFluid({
+    capability: <span class="c-string">"user-feedback"</span>,
+    context: { device: <span class="c-string">"desktop"</span>, isOutageActive: <span class="c-keyword">true</span> }
+  });
+
+  <span class="c-keyword">if</span> (loading) <span class="c-keyword">return</span> &lt;<span class="c-tag">div</span>&gt;Loading Fluid interface...&lt;/<span class="c-tag">div</span>&gt;;
+
+  <span class="c-keyword">return</span> (
+    &lt;<span class="c-tag">main</span> <span class="c-attr">className</span>=<span class="c-string">"dark bg-black p-12"</span>&gt;
+      &lt;<span class="c-tag">FluidRenderer</span> 
+        <span class="c-attr">ir</span>={ir} 
+        <span class="c-attr">onAction</span>={executeAction} 
+      /&gt;
+    &lt;/<span class="c-tag">main</span>&gt;
+  );
+}</code></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. Why IR Matters Section -->
+      <section id="ir-benefits" class="ir-section scroll-reveal">
+        <div class="section-container">
+          <div class="section-header">
+            <h2 class="section-title">Why an IR Compiler Wins</h2>
+            <p class="section-desc">Generating JavaScript directly from AI is slow, insecure, and breaks on updates. Fluid uses an Intermediate Representation (IR) to ensure speed, security, and predictability.</p>
+          </div>
+
+          <div class="ir-grid">
+            <div class="ir-card">
+              <div class="ir-card-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+              </div>
+              <h4>Deterministic Sandbox</h4>
+              <p>Since the output is a JSON-based schema, it runs within a sandbox with strict capability boundaries. Code injections, broken third-party script runs, and unexpected client crashes are mathematically impossible.</p>
+            </div>
+
+            <div class="ir-card">
+              <div class="ir-card-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+              </div>
+              <h4>Edge-Cacheable Layouts</h4>
+              <p>Dynamic evaluations take place in Vercel / Cloudflare Edge Workers in under 5ms. The resulting IR payload is tiny (typically less than 2KB), resulting in faster page loads and zero bundle hydration lag.</p>
+            </div>
+
+            <div class="ir-card">
+              <div class="ir-card-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
+              </div>
+              <h4>Cross-Platform Native</h4>
+              <p>You aren't locked to HTML. The same Fluid IR compiles natively into React Components, Swift UI for iOS apps, Jetpack Compose for Android, or Flutter views. Code once, personalize everywhere.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7. Features Bento Grid Section -->
+      <section id="features" class="features-section scroll-reveal">
+        <div class="section-container">
+          <div class="section-header">
+            <h2 class="section-title">Engineered for Reliability</h2>
+            <p class="section-desc">Fluid was built to satisfy security teams, performance budgets, and developer workflows alike.</p>
+          </div>
+
+          <div class="bento-grid">
+            <!-- Box 1: Edge Computing -->
+            <div class="bento-box bento-large">
+              <div class="bento-content">
+                <div class="bento-badge">Speed</div>
+                <h3>Edge-compiled in 1.4ms</h3>
+                <p>Resolution happens at global edge nodes. Fluid measures latency in microseconds, generating personalized screens way ahead of initial byte reception on the browser.</p>
+                <div class="bento-viz latency-viz">
+                  <div class="latency-line">
+                    <span class="l-label">Traditional SSR</span>
+                    <div class="l-bar l-red" style="width: 80%"><span>120ms</span></div>
+                  </div>
+                  <div class="latency-line">
+                    <span class="l-label">Fluid Edge Resolution</span>
+                    <div class="l-bar l-blue" style="width: 15%"><span>1.4ms</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Box 2: Type Safety -->
+            <div class="bento-box bento-small">
+              <div class="bento-content">
+                <div class="bento-badge">Type Safety</div>
+                <h3>100% Type-Safe</h3>
+                <p>Automatic TypeScript binding generator makes sure frontend actions match backend schema APIs precisely. Any schema drift will fail compile builds.</p>
+              </div>
+            </div>
+
+            <!-- Box 3: OpenTelemetry -->
+            <div class="bento-box bento-small">
+              <div class="bento-content">
+                <div class="bento-badge">Observability</div>
+                <h3>OpenTelemetry Tracing</h3>
+                <p>Trace why specific components were selected. Out-of-the-box logs expose intent tokens, rendering rules, and rendering scores in your Datadog or honeycomb console.</p>
+              </div>
+            </div>
+
+            <!-- Box 4: Multi-SDK -->
+            <div class="bento-box bento-medium">
+              <div class="bento-content">
+                <div class="bento-badge">Multi-Platform</div>
+                <h3>Unified SDK Suite</h3>
+                <p>Deliver identical personalization schemas to React, Solid, iOS Swift, and Android Jetpack layouts. Ensure perfect architectural cohesion across mobile, desktop and web apps.</p>
+                <div class="sdk-icons">
+                  <span>React</span>
+                  <span>Next.js</span>
+                  <span>Swift</span>
+                  <span>Kotlin</span>
+                  <span>Vue</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Box 5: Custom component registry -->
+            <div class="bento-box bento-medium">
+              <div class="bento-content">
+                <div class="bento-badge">Extensibility</div>
+                <h3>Bring Your Own Component (BYOC)</h3>
+                <p>Register your core components to the Fluid workspace. The compiler will structure and style your designs, preserving custom branding, tokens, and animations.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 8. Developer Experience Section -->
+      <section id="dx" class="dx-section scroll-reveal">
+        <div class="section-container">
+          <div class="section-header">
+            <h2 class="section-title">Built for Developer Flow</h2>
+            <p class="section-desc">Fluid integrates seamlessly into your terminal, CI pipelines, and version control. Push schemas just like you push code.</p>
+          </div>
+
+          <div class="terminal-wrapper">
+            <div class="terminal-header">
+              <div class="terminal-buttons">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <div class="terminal-title">bash — fluid deploy</div>
+            </div>
+            <div class="terminal-body" id="dx-terminal">
+              <!-- Content filled via JavaScript animation -->
+              <div class="term-line"><span class="term-prompt">$</span> <span class="term-cmd">npm install -g @fluid-ui/cli</span></div>
+              <div class="term-line term-output">added 24 packages in 1.2s</div>
+              <div class="term-line"><span class="term-prompt">$</span> <span class="term-cmd">fluid push ./schemas</span></div>
+              <div class="term-line term-output">✓ Discovered 3 interfaces in `./schemas`</div>
+              <div class="term-line term-output">✓ Schema validation complete (0 errors)</div>
+              <div class="term-line term-output">✓ Compiled Intermediate Representation (IR) files</div>
+              <div class="term-line term-output term-success">✓ Deployed to global registry edge. Diff: 2 added, 1 modified. [9ms propagation]</div>
+              <div class="term-line"><span class="term-prompt">$</span> <span class="term-cmd">_</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 9. Vision Statement Section -->
+      <section id="vision" class="vision-section scroll-reveal">
+        <div class="section-container">
+          <div class="vision-block">
+            <div class="vision-quote-symbol">“</div>
+            <p class="vision-text">We are moving beyond the static interface era. Fluid decouples layout design from user capability, enabling software to morph around human intent in real time.</p>
+            <div class="vision-author">
+              <span class="author-name">Alex Rivera</span>
+              <span class="author-title">CTO, Fluid Labs</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 10. Final CTA Section -->
+      <section id="cta" class="cta-section scroll-reveal">
+        <div class="section-container">
+          <div class="cta-card">
+            <h2>Ready to ship fluid interfaces?</h2>
+            <p>Deploy your first capability schema in 5 minutes. Start personalizing experiences without frontend refactoring cycles.</p>
+            
+            <div class="cli-command-box">
+              <code class="cli-cmd-text" id="cli-cmd-copy">npm install @fluid-ui/react</code>
+              <button class="cli-copy-btn" id="cli-copy-trigger">
+                <span id="copy-btn-text">Copy</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="copy-icon"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              </button>
+            </div>
+
+            <div class="cta-actions">
+              <a href="#demo" class="btn btn-primary btn-large">Start Building Now</a>
+              <a href="#docs" class="btn btn-secondary btn-large">Read the SDK Guide</a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-container">
+        <div class="footer-brand">
+          <div class="logo">
+            <svg class="logo-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="logo-text">Fluid</span>
+          </div>
+          <p class="footer-tagline">Declarative user experience infrastructure.</p>
+        </div>
+        
+        <div class="footer-links">
+          <div class="link-column">
+            <h4>Product</h4>
+            <a href="#">Engine</a>
+            <a href="#">Registry</a>
+            <a href="#">CLI</a>
+            <a href="#">Pricing</a>
+          </div>
+          <div class="link-column">
+            <h4>Resources</h4>
+            <a href="#">Documentation</a>
+            <a href="#">Guides</a>
+            <a href="#">API Reference</a>
+            <a href="#">Integrations</a>
+          </div>
+          <div class="link-column">
+            <h4>Company</h4>
+            <a href="#">About</a>
+            <a href="#">Blog</a>
+            <a href="#">Careers</a>
+            <a href="#">Contact</a>
+          </div>
+        </div>
+      </div>
+      
+      <div class="footer-bottom">
+        <div class="footer-bottom-container">
+          <p class="copyright">&copy; 2026 Fluid Labs, Inc. All rights reserved.</p>
+          <div class="social-links">
+            <a href="#" aria-label="GitHub">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+            </a>
+            <a href="#" aria-label="X (Twitter)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
