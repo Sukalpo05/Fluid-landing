@@ -849,6 +849,109 @@ function initScrollReveal() {
 }
 
 /* ==========================================================================
+   Background Animation
+   ========================================================================== */
+
+function initBackgroundAnimation() {
+  const canvas = document.getElementById('bg-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let width, height;
+  let mouse = { x: null, y: null };
+
+  // Multi-layered wave animation
+  const waves = [
+    {
+      // Primary wave (blue)
+      points: [],
+      amplitude: 80,
+      wavelength: 120,
+      speed: 0.02,
+      offset: 0,
+      fillStyle: 'rgba(0, 114, 245, 0.15)',
+      strokeStyle: 'rgba(0, 114, 245, 0.6)',
+    },
+    {
+      // Secondary wave (soft white)
+      points: [],
+      amplitude: 50,
+      wavelength: 80,
+      speed: 0.015,
+      offset: 0,
+      fillStyle: 'rgba(255, 255, 255, 0.1)',
+      strokeStyle: 'rgba(255, 255, 255, 0.4)',
+    },
+  ];
+
+  // Initialize points for each wave based on current canvas size
+  function initWaves() {
+    waves.forEach(wave => {
+      wave.points = [];
+      for (let x = 0; x <= width; x += 10) {
+        wave.points.push({ x, y: height / 2 });
+      }
+    });
+  }
+
+  function updateWaves() {
+    waves.forEach(wave => {
+      wave.offset += wave.speed;
+      for (let i = 0; i < wave.points.length; i++) {
+        const p = wave.points[i];
+        const dx = p.x + wave.offset * 100;
+        p.y = height / 2 + Math.sin(dx / wave.wavelength) * wave.amplitude;
+        // Mouse interaction – gentle pull toward cursor
+        if (mouse.x !== null) {
+          const dist = Math.abs(p.x - mouse.x);
+          if (dist < 100) {
+            const pull = (100 - dist) / 100;
+            p.y += (mouse.y - height / 2) * pull * 0.5;
+          }
+        }
+      }
+    });
+  }
+
+  function drawWaves() {
+    ctx.clearRect(0, 0, width, height);
+    waves.forEach(wave => {
+      ctx.beginPath();
+      ctx.moveTo(0, wave.points[0].y);
+      for (let i = 1; i < wave.points.length; i++) {
+        ctx.lineTo(wave.points[i].x, wave.points[i].y);
+      }
+      // Close shape to bottom of canvas for fill
+      ctx.lineTo(width, height);
+      ctx.lineTo(0, height);
+      ctx.closePath();
+      ctx.fillStyle = wave.fillStyle;
+      ctx.fill();
+      ctx.strokeStyle = wave.strokeStyle;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    });
+  }
+
+  // Resize handler now reinitializes wave points
+  function resize() {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+    initWaves();
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // Initialize and start animation
+  initWaves();
+  function animate() {
+    updateWaves();
+    drawWaves();
+    requestAnimationFrame(animate);
+  }
+  animate();
+}
+
+/* ==========================================================================
    Bootstrap Application
    ========================================================================== */
 
@@ -858,4 +961,5 @@ document.addEventListener('DOMContentLoaded', () => {
   initClipboardCopy();
   animateTerminal();
   initScrollReveal();
+  initBackgroundAnimation();
 });

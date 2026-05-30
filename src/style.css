@@ -35,6 +35,16 @@
         --glass-blur: blur(12px) saturate(190%);
       }
 
+      #bg-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: -1;
+        pointer-events: none;
+      }
+
       /* --- Base Resets & Layout --- */
       * {
         box-sizing: border-box;
@@ -44,7 +54,7 @@
 
       html {
         scroll-behavior: smooth;
-        background-color: var(--bg-absolute);
+        background-color: var(--bg-primary);
         color: var(--fg-primary);
         font-family: var(--font-sans);
         font-size: 16px;
@@ -55,12 +65,7 @@
 
       body {
         overflow-x: hidden;
-        background-color: var(--bg-primary);
-        background-image: 
-          linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-        background-size: 50px 50px;
-        background-position: center top;
+        background-color: transparent;
       }
 
       /* Background Glows */
