@@ -501,22 +501,33 @@
       /* --- 2. Interactive Demo Section --- */
       .demo-workspace {
         display: grid;
-        grid-template-columns: 1fr 0.8fr 1.2fr;
-        gap: 20px;
+        grid-template-columns: 1.4fr 1fr;
+        grid-template-rows: auto auto;
+        grid-template-areas: "controls compiler" "preview preview";
+        gap: 28px;
         background: var(--bg-secondary);
         border: 1px solid var(--border-muted);
         border-radius: 12px;
-        padding: 20px;
-        min-height: 520px;
+        padding: 24px;
+        min-height: auto;
       }
+
+      .demo-controls { grid-area: controls; }
+      .demo-compiler { grid-area: compiler; }
+      .demo-preview { grid-area: preview; }
 
       .demo-panel {
         display: flex;
         flex-direction: column;
-        border-radius: 8px;
+        border-radius: 10px;
         background: rgba(255, 255, 255, 0.01);
         border: 1px solid var(--border-muted);
         overflow: hidden;
+        min-height: 500px;
+      }
+
+      .demo-preview {
+        min-height: 480px;
       }
 
       .panel-header {
