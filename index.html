@@ -3,11 +3,1705 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Fluid generates user-specific interfaces from a single schema. Ship one capability definition and let AI create the right UI for every user." />
+    <meta name="description" content="Fluid compiles validated IR from schema and intent using dual-path execution: archetype fast path or Claude Opus 4.7 generation with cache + Zod boundaries." />
     <title>Fluid — Frontend personalization without frontend customization</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+      /* ==========================================================================
+         Fluid CSS Design System
+         Aesthetic: Dark, Minimalist, Premium Developer-Tool (Vercel/Linear/Warp)
+         ========================================================================== */
+
+      :root {
+        --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        --font-heading: 'Outfit', var(--font-sans);
+
+        /* Colors */
+        --bg-absolute: #000000;
+        --bg-primary: #030303;
+        --bg-secondary: #0a0a0c;
+        --bg-tertiary: #121215;
+        --fg-primary: #ededed;
+        --fg-secondary: #a3a3a3;
+        --fg-muted: #666666;
+        --fg-dark: #333333;
+
+        /* Accent Glows */
+        --accent-blue: #0072f5;
+        --accent-purple: #7928ca;
+        --accent-pink: #ff0080;
+        --accent-cyan: #00dfd8;
+        --accent-green: #00ff87;
+        --accent-red: #ff3366;
+
+        /* Borders & Shadows */
+        --border-muted: rgba(255, 255, 255, 0.07);
+        --border-active: rgba(255, 255, 255, 0.15);
+        --border-glow: rgba(0, 114, 245, 0.3);
+        --shadow-premium: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+        --glass-bg: rgba(10, 10, 12, 0.65);
+        --glass-blur: blur(12px) saturate(190%);
+      }
+
+      /* --- Base Resets & Layout --- */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html {
+        scroll-behavior: smooth;
+        background-color: var(--bg-absolute);
+        color: var(--fg-primary);
+        font-family: var(--font-sans);
+        font-size: 16px;
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      body {
+        overflow-x: hidden;
+        background-color: var(--bg-primary);
+        background-image: 
+          linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        background-size: 50px 50px;
+        background-position: center top;
+      }
+
+      /* Background Glows */
+      .glow-bg {
+        position: absolute;
+        width: 600px;
+        height: 600px;
+        border-radius: 50%;
+        filter: blur(140px);
+        pointer-events: none;
+        opacity: 0.12;
+        z-index: 0;
+        transform: translate3d(0,0,0);
+      }
+      .glow-hero {
+        top: -100px;
+        left: 50%;
+        margin-left: -300px;
+        background: radial-gradient(circle, var(--accent-blue) 0%, var(--accent-purple) 60%, var(--accent-pink) 100%);
+        opacity: 0.18;
+      }
+      .glow-features {
+        bottom: 20%;
+        right: -100px;
+        background: radial-gradient(circle, var(--accent-cyan) 0%, var(--accent-blue) 100%);
+        width: 500px;
+        height: 500px;
+      }
+
+      /* --- Containers --- */
+      .section-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 24px;
+        width: 100%;
+      }
+
+      section {
+        position: relative;
+        padding: 100px 0;
+        border-bottom: 1px solid var(--border-muted);
+      }
+
+      /* --- Typography --- */
+      h1, h2, h3, h4 {
+        font-family: var(--font-heading);
+        font-weight: 700;
+        letter-spacing: -0.04em;
+        line-height: 1.1;
+        color: #ffffff;
+      }
+
+      .hero-title {
+        font-size: clamp(2.5rem, 5vw, 4.5rem);
+        background: linear-gradient(180deg, #ffffff 30%, #b0b0b0 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 24px;
+      }
+
+      .section-title {
+        font-size: clamp(2rem, 3.5vw, 3rem);
+        text-align: center;
+        margin-bottom: 16px;
+        background: linear-gradient(180deg, #ffffff 40%, #888888 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .section-header {
+        text-align: center;
+        max-width: 700px;
+        margin: 0 auto 64px auto;
+      }
+
+      .section-desc {
+        font-size: clamp(1rem, 1.2vw, 1.25rem);
+        color: var(--fg-secondary);
+        line-height: 1.6;
+      }
+
+      p {
+        color: var(--fg-secondary);
+        line-height: 1.6;
+      }
+
+      /* --- Header / Navigation --- */
+      .header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 64px;
+        z-index: 100;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--border-muted);
+      }
+
+      .header-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 24px;
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        color: #ffffff;
+      }
+
+      .logo-icon {
+        transition: transform 0.3s ease;
+      }
+
+      .logo:hover .logo-icon {
+        transform: rotate(5deg) scale(1.05);
+      }
+
+      .logo-text {
+        font-family: var(--font-heading);
+        font-weight: 600;
+        font-size: 1.25rem;
+        letter-spacing: -0.02em;
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 32px;
+      }
+
+      .nav-link {
+        color: var(--fg-secondary);
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: color 0.2s ease;
+      }
+
+      .nav-link:hover {
+        color: #ffffff;
+      }
+
+      .nav-actions {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      /* --- Buttons --- */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        padding: 10px 20px;
+        border-radius: 6px;
+        text-decoration: none;
+        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        cursor: pointer;
+      }
+
+      .btn-primary {
+        background-color: #ffffff;
+        color: #000000;
+        border: 1px solid #ffffff;
+      }
+
+      .btn-primary:hover {
+        background-color: #ededed;
+        box-shadow: 0 0 24px rgba(255, 255, 255, 0.25);
+        transform: translateY(-1px);
+      }
+
+      .btn-primary-nav {
+        background-color: #ffffff;
+        color: #000000;
+        padding: 6px 14px;
+        font-size: 0.85rem;
+        border-radius: 4px;
+      }
+
+      .btn-primary-nav:hover {
+        background-color: #ededed;
+      }
+
+      .btn-secondary {
+        background-color: transparent;
+        color: #ffffff;
+        border: 1px solid var(--border-active);
+        background-image: linear-gradient(rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0));
+      }
+
+      .btn-secondary:hover {
+        border-color: rgba(255, 255, 255, 0.3);
+        background-color: rgba(255, 255, 255, 0.03);
+      }
+
+      .btn-text {
+        color: var(--fg-secondary);
+        background: transparent;
+        border: none;
+      }
+
+      .btn-text:hover {
+        color: #ffffff;
+      }
+
+      .btn-large {
+        padding: 14px 28px;
+        font-size: 1rem;
+      }
+
+      /* --- 1. Hero Section --- */
+      .hero-section {
+        padding-top: 150px;
+        padding-bottom: 80px;
+        display: flex;
+        align-items: center;
+        min-height: calc(100vh - 64px);
+      }
+
+      .hero-grid {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 48px;
+        align-items: center;
+      }
+
+      .hero-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 14px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border-muted);
+        margin-bottom: 24px;
+      }
+
+      .badge-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background-color: var(--accent-cyan);
+        box-shadow: 0 0 8px var(--accent-cyan);
+        animation: pulse-glow 2s infinite;
+      }
+
+      .badge-text {
+        font-size: 0.8rem;
+        font-weight: 500;
+        letter-spacing: -0.01em;
+        color: var(--fg-secondary);
+      }
+
+      .hero-subtitle {
+        font-size: 1.25rem;
+        color: var(--fg-secondary);
+        line-height: 1.6;
+        margin-bottom: 40px;
+        max-width: 580px;
+      }
+
+      .hero-actions {
+        display: flex;
+        gap: 16px;
+      }
+
+      /* Hero Animated Architecture Visual */
+      .hero-visual {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .architecture-wrapper {
+        width: 100%;
+        max-width: 480px;
+        background: var(--glass-bg);
+        backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--border-muted);
+        border-radius: 12px;
+        box-shadow: var(--shadow-premium);
+        overflow: hidden;
+      }
+
+      .card-header-bar {
+        background: rgba(255, 255, 255, 0.02);
+        border-bottom: 1px solid var(--border-muted);
+        padding: 10px 16px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .window-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: var(--border-active);
+      }
+
+      .window-dot:nth-child(1) { background-color: #ff5f56; }
+      .window-dot:nth-child(2) { background-color: #ffbd2e; }
+      .window-dot:nth-child(3) { background-color: #27c93f; }
+
+      .window-title {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        color: var(--fg-muted);
+        margin-left: 10px;
+      }
+
+      .architecture-canvas {
+        padding: 40px 24px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+        position: relative;
+      }
+
+      .arch-node {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-muted);
+        padding: 12px 20px;
+        border-radius: 8px;
+        width: 220px;
+        transition: all 0.3s ease;
+        position: relative;
+        z-index: 10;
+      }
+
+      .arch-node:hover {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: var(--border-active);
+        box-shadow: 0 0 15px rgba(255, 255, 255, 0.03);
+      }
+
+      .node-icon {
+        color: var(--fg-secondary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .node-label {
+        font-size: 0.9rem;
+        font-weight: 500;
+        letter-spacing: -0.01em;
+      }
+
+      /* Connectors */
+      .arch-connector {
+        width: 2px;
+        height: 28px;
+        background-color: var(--border-muted);
+        position: relative;
+      }
+
+      .pulse-dot {
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background-color: var(--accent-blue);
+        left: -2px;
+        top: 0;
+        animation: flow-down 2.5s infinite linear;
+        box-shadow: 0 0 8px var(--accent-blue);
+      }
+
+      #conn-2 .pulse-dot {
+        background-color: var(--accent-cyan);
+        animation-delay: 0.5s;
+        box-shadow: 0 0 8px var(--accent-cyan);
+      }
+
+      #conn-3 .pulse-dot {
+        background-color: var(--accent-purple);
+        animation-delay: 1s;
+        box-shadow: 0 0 8px var(--accent-purple);
+      }
+
+      #conn-4 .pulse-dot {
+        background-color: var(--accent-green);
+        animation-delay: 1.5s;
+        box-shadow: 0 0 8px var(--accent-green);
+      }
+
+      /* Glowing Compiler Activation effect */
+      @keyframes flow-down {
+        0% { top: -4px; opacity: 0; }
+        10% { opacity: 1; }
+        90% { opacity: 1; }
+        100% { top: calc(100% - 2px); opacity: 0; }
+      }
+
+      @keyframes pulse-glow {
+        0% { transform: scale(1); opacity: 0.8; }
+        50% { transform: scale(1.3); opacity: 1; }
+        100% { transform: scale(1); opacity: 0.8; }
+      }
+
+      /* Highlight Active Compiler node specifically */
+      #node-engine {
+        border-color: rgba(121, 40, 202, 0.4);
+        background: rgba(121, 40, 202, 0.05);
+      }
+      #node-engine .node-icon {
+        color: var(--accent-purple);
+      }
+
+      /* --- 2. Interactive Demo Section --- */
+      .demo-workspace {
+        display: grid;
+        grid-template-columns: 1fr 0.8fr 1.2fr;
+        gap: 20px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-muted);
+        border-radius: 12px;
+        padding: 20px;
+        min-height: 520px;
+      }
+
+      .demo-panel {
+        display: flex;
+        flex-direction: column;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.01);
+        border: 1px solid var(--border-muted);
+        overflow: hidden;
+      }
+
+      .panel-header {
+        padding: 12px 16px;
+        background: rgba(255, 255, 255, 0.02);
+        border-bottom: 1px solid var(--border-muted);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .panel-title {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+        color: var(--fg-muted);
+        font-weight: 600;
+      }
+
+      .panel-content {
+        padding: 16px;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* Control Controls Panel */
+      .preset-selector {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .preset-selector label {
+        font-size: 0.75rem;
+        color: var(--fg-muted);
+      }
+      .custom-select {
+        background: rgba(0, 0, 0, 0.8);
+        border: 1px solid var(--border-active);
+        color: #ffffff;
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        padding: 4px 8px;
+        border-radius: 4px;
+        outline: none;
+      }
+
+      .code-editor-header {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.75rem;
+        margin-bottom: 8px;
+        color: var(--fg-secondary);
+      }
+
+      .badge-ts {
+        color: var(--accent-blue);
+        font-size: 0.7rem;
+      }
+
+      .editor-container {
+        background: #000000;
+        border: 1px solid var(--border-muted);
+        border-radius: 6px;
+        padding: 12px;
+        flex-grow: 1;
+        min-height: 180px;
+        margin-bottom: 16px;
+        overflow: auto;
+      }
+
+      .code-editor-display {
+        margin: 0;
+        text-align: left;
+      }
+
+      .code-editor-display code {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        line-height: 1.4;
+        color: #b3c6ff;
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+
+      .intent-header {
+        font-size: 0.75rem;
+        margin-bottom: 8px;
+        color: var(--fg-secondary);
+      }
+
+      .intent-selector-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .intent-btn {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-muted);
+        padding: 10px 14px;
+        border-radius: 6px;
+        color: var(--fg-secondary);
+        cursor: pointer;
+        text-align: left;
+        transition: all 0.2s ease;
+      }
+
+      .intent-btn:hover {
+        border-color: var(--border-active);
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .intent-btn.active {
+        border-color: rgba(0, 114, 245, 0.5);
+        background: rgba(0, 114, 245, 0.05);
+        color: #ffffff;
+      }
+
+      .intent-icon {
+        font-size: 1.1rem;
+      }
+
+      .intent-name {
+        font-size: 0.8rem;
+        font-weight: 500;
+      }
+
+      .intent-desc {
+        margin-top: 10px;
+        font-size: 0.75rem;
+        color: var(--fg-muted);
+        min-height: 36px;
+      }
+
+      /* Compiler Middle Panel */
+      .compiler-logs {
+        gap: 12px;
+        text-align: left;
+      }
+
+      .log-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        color: var(--fg-secondary);
+        opacity: 0.5;
+        transition: opacity 0.3s ease;
+      }
+
+      .log-item.active {
+        opacity: 1;
+      }
+
+      .log-bullet {
+        color: var(--accent-blue);
+        margin-right: 6px;
+      }
+
+      .log-status {
+        font-size: 0.7rem;
+        color: var(--accent-green);
+      }
+
+      .compiler-meter {
+        height: 2px;
+        background: var(--border-muted);
+        border-radius: 2px;
+        margin: 12px 0;
+        overflow: hidden;
+      }
+
+      .meter-bar {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+        transition: width 0.3s ease;
+      }
+
+      .ir-inspect-box {
+        background: #000000;
+        border: 1px solid var(--border-muted);
+        border-radius: 6px;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .ir-box-header {
+        background: rgba(255, 255, 255, 0.02);
+        border-bottom: 1px solid var(--border-muted);
+        padding: 6px 12px;
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        color: var(--fg-muted);
+      }
+
+      .ir-box-code {
+        padding: 12px;
+        overflow: auto;
+        margin: 0;
+        flex-grow: 1;
+        text-align: left;
+      }
+
+      .ir-box-code code {
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        line-height: 1.3;
+        color: #ff99cc;
+        white-space: pre-wrap;
+      }
+
+      /* Output Preview Panel */
+      .preview-badge {
+        background: rgba(0, 255, 135, 0.1);
+        color: var(--accent-green);
+        font-family: var(--font-mono);
+        font-size: 0.65rem;
+        padding: 2px 6px;
+        border-radius: 3px;
+        border: 1px solid rgba(0, 255, 135, 0.2);
+      }
+
+      .preview-area {
+        align-items: center;
+        justify-content: center;
+        background-image: radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 0);
+        background-size: 16px 16px;
+      }
+
+      .device-mockup {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .device-screen {
+        background: #0d0d0f;
+        border: 1px solid var(--border-active);
+        border-radius: 8px;
+        padding: 20px;
+        width: 100%;
+        min-height: 380px;
+        box-shadow: var(--shadow-premium);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: stretch;
+        transition: max-width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .device-screen.device-mobile {
+        max-width: 290px;
+        min-height: 420px;
+        padding: 16px;
+        border-radius: 20px;
+        border-width: 4px;
+      }
+
+      /* Live Render Mock Component styling */
+      .mock-container {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        text-align: left;
+        animation: fade-in-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+
+      @keyframes fade-in-up {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .mock-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+
+      .mock-alert {
+        background: rgba(255, 51, 102, 0.08);
+        border: 1px solid rgba(255, 51, 102, 0.15);
+        color: var(--accent-red);
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .mock-label {
+        font-size: 0.75rem;
+        color: var(--fg-secondary);
+        margin-bottom: 4px;
+        display: block;
+      }
+
+      .mock-input {
+        width: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        border: 1px solid var(--border-muted);
+        color: #ffffff;
+        padding: 10px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        outline: none;
+        font-family: inherit;
+      }
+      .mock-input:focus {
+        border-color: var(--accent-blue);
+      }
+
+      /* Stripe Form / Cards */
+      .mock-payment-row {
+        display: flex;
+        gap: 12px;
+      }
+
+      .payment-method-card {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-muted);
+        border-radius: 4px;
+        padding: 12px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      .payment-method-card.active {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: #ffffff;
+      }
+
+      .method-name {
+        font-size: 0.75rem;
+        font-weight: 500;
+        margin-top: 4px;
+        color: var(--fg-primary);
+      }
+
+      .mock-btn {
+        width: 100%;
+        background: #ffffff;
+        color: #000000;
+        border: none;
+        padding: 10px;
+        font-weight: 600;
+        font-size: 0.8rem;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        text-align: center;
+      }
+      .mock-btn:hover {
+        background-color: #ededed;
+      }
+
+      .mock-btn-danger {
+        background: var(--accent-red);
+        color: #ffffff;
+      }
+      .mock-btn-danger:hover {
+        background: #e62253;
+      }
+
+      /* SRE Analytics inside demo screen */
+      .chart-box {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-muted);
+        border-radius: 6px;
+        height: 120px;
+        position: relative;
+        overflow: hidden;
+        margin: 8px 0;
+      }
+
+      .chart-bars {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        height: 100%;
+        padding: 10px 14px;
+      }
+
+      .chart-bar {
+        width: 12px;
+        background: var(--accent-blue);
+        border-radius: 2px 2px 0 0;
+        transition: height 1s ease;
+      }
+
+      .chart-bar-danger {
+        background: var(--accent-red);
+      }
+
+      .log-terminal-lines {
+        background: #000000;
+        padding: 8px;
+        border-radius: 4px;
+        font-family: var(--font-mono);
+        font-size: 0.65rem;
+        color: var(--fg-secondary);
+        max-height: 80px;
+        overflow-y: auto;
+      }
+
+      /* Star selector feedback mockup */
+      .star-selector {
+        display: flex;
+        gap: 8px;
+      }
+      .star-selector span {
+        font-size: 1.3rem;
+        cursor: pointer;
+        opacity: 0.4;
+        transition: opacity 0.2s ease;
+      }
+      .star-selector span.active {
+        opacity: 1;
+      }
+
+      /* --- 3. Problem Section --- */
+      .problem-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 32px;
+      }
+
+      .problem-card {
+        background: var(--glass-bg);
+        backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--border-muted);
+        padding: 40px;
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        box-shadow: var(--shadow-premium);
+        transition: border-color 0.3s ease;
+      }
+
+      .problem-card:hover {
+        border-color: var(--border-active);
+      }
+
+      .problem-card-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        font-weight: 500;
+        margin-bottom: 24px;
+      }
+
+      .legacy-status {
+        color: var(--accent-red);
+      }
+
+      .fluid-status {
+        color: var(--accent-green);
+      }
+
+      .problem-card h3 {
+        font-size: 1.5rem;
+        margin-bottom: 12px;
+      }
+
+      .problem-card p {
+        color: var(--fg-secondary);
+        font-size: 0.95rem;
+        line-height: 1.6;
+        margin-bottom: 32px;
+        flex-grow: 1;
+      }
+
+      .problem-code-visual {
+        background: #000000;
+        border: 1px solid var(--border-muted);
+        border-radius: 6px;
+        padding: 20px;
+        text-align: left;
+      }
+
+      .problem-code-visual pre {
+        margin: 0;
+        overflow: auto;
+      }
+
+      .problem-code-visual code {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        line-height: 1.4;
+        color: #d1d1d1;
+      }
+
+      /* --- 4. How It Works Section --- */
+      .how-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 40px;
+      }
+
+      .how-step {
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+
+      .step-num {
+        font-family: var(--font-heading);
+        font-size: 3.5rem;
+        font-weight: 800;
+        background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        line-height: 1;
+        margin-bottom: 16px;
+      }
+
+      .how-step h4 {
+        font-size: 1.25rem;
+        margin-bottom: 12px;
+      }
+
+      .how-step p {
+        font-size: 0.9rem;
+        color: var(--fg-secondary);
+      }
+
+      /* --- 5. Code Example Section --- */
+      .code-window {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-muted);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: var(--shadow-premium);
+        max-width: 800px;
+        margin: 0 auto;
+      }
+
+      .code-window-header {
+        background: rgba(255, 255, 255, 0.02);
+        border-bottom: 1px solid var(--border-muted);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 16px;
+      }
+
+      .code-tabs {
+        display: flex;
+        gap: 8px;
+      }
+
+      .code-tab-btn {
+        background: transparent;
+        border: none;
+        color: var(--fg-muted);
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        padding: 14px 16px;
+        cursor: pointer;
+        position: relative;
+        transition: color 0.2s ease;
+      }
+
+      .code-tab-btn:hover {
+        color: var(--fg-secondary);
+      }
+
+      .code-tab-btn.active {
+        color: #ffffff;
+      }
+
+      .code-tab-btn.active::after {
+        content: '';
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background-color: var(--accent-blue);
+      }
+
+      .lang-label {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        color: var(--fg-muted);
+      }
+
+      .code-window-body {
+        background: #000000;
+        padding: 24px;
+        text-align: left;
+      }
+
+      .code-block {
+        display: none;
+        margin: 0;
+        overflow: auto;
+      }
+
+      .code-block.active {
+        display: block;
+      }
+
+      .code-block code {
+        font-family: var(--font-mono);
+        font-size: 0.85rem;
+        line-height: 1.5;
+        color: #d1d1bd;
+      }
+
+      /* Syntax Highlighting Styles */
+      .c-keyword { color: #f47067; font-weight: 500; }
+      .c-string { color: #96d0ff; }
+      .c-key { color: #8ddb8c; }
+      .c-comment { color: #768390; font-style: italic; }
+      .c-tag { color: #f47067; }
+      .c-attr { color: #e1b48f; }
+
+      /* --- 6. Why IR Matters Section --- */
+      .ir-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 32px;
+      }
+
+      .ir-card {
+        background: var(--glass-bg);
+        backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--border-muted);
+        padding: 32px;
+        border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        transition: all 0.25s ease;
+      }
+
+      .ir-card:hover {
+        border-color: var(--border-active);
+        transform: translateY(-2px);
+      }
+
+      .ir-card-icon {
+        width: 44px;
+        height: 44px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border-muted);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        margin-bottom: 24px;
+      }
+
+      .ir-card h4 {
+        font-size: 1.2rem;
+        margin-bottom: 12px;
+      }
+
+      .ir-card p {
+        font-size: 0.85rem;
+        line-height: 1.6;
+      }
+
+      /* --- 7. Features Bento Grid Section --- */
+      .bento-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        grid-auto-rows: 220px;
+        gap: 20px;
+      }
+
+      .bento-box {
+        background: var(--glass-bg);
+        backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--border-muted);
+        border-radius: 12px;
+        padding: 30px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        overflow: hidden;
+        transition: border-color 0.3s ease;
+      }
+
+      .bento-box:hover {
+        border-color: var(--border-active);
+      }
+
+      .bento-large {
+        grid-column: span 2;
+        grid-row: span 2;
+        justify-content: flex-start;
+        gap: 16px;
+      }
+
+      .bento-medium {
+        grid-column: span 2;
+        justify-content: space-between;
+      }
+
+      .bento-small {
+        grid-column: span 1;
+      }
+
+      .bento-badge {
+        display: inline-flex;
+        font-family: var(--font-mono);
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--accent-blue);
+        background: rgba(0, 114, 245, 0.08);
+        border: 1px solid rgba(0, 114, 245, 0.15);
+        padding: 4px 8px;
+        border-radius: 4px;
+        align-self: flex-start;
+      }
+
+      .bento-box h3 {
+        font-size: 1.5rem;
+        margin-top: 8px;
+      }
+
+      .bento-box p {
+        font-size: 0.9rem;
+        color: var(--fg-secondary);
+      }
+
+      .latency-viz {
+        margin-top: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        background: rgba(0,0,0,0.3);
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid var(--border-muted);
+      }
+
+      .latency-line {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .l-label {
+        font-size: 0.75rem;
+        font-family: var(--font-mono);
+        width: 140px;
+        color: var(--fg-muted);
+      }
+
+      .l-bar {
+        flex-grow: 1;
+        height: 24px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        padding-left: 10px;
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        font-weight: 600;
+      }
+
+      .l-red {
+        color: var(--accent-red);
+        background: rgba(255, 51, 102, 0.15);
+        border: 1px solid rgba(255, 51, 102, 0.3);
+      }
+
+      .l-blue {
+        color: var(--accent-green);
+        background: rgba(0, 255, 135, 0.15);
+        border: 1px solid rgba(0, 255, 135, 0.3);
+      }
+
+      .sdk-icons {
+        display: flex;
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .sdk-icons span {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border-muted);
+        padding: 6px 12px;
+        border-radius: 4px;
+      }
+
+      /* --- 8. Developer Experience Section --- */
+      .terminal-wrapper {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-muted);
+        border-radius: 12px;
+        box-shadow: var(--shadow-premium);
+        max-width: 760px;
+        margin: 0 auto;
+        overflow: hidden;
+      }
+
+      .terminal-header {
+        background: rgba(255, 255, 255, 0.02);
+        border-bottom: 1px solid var(--border-muted);
+        padding: 12px 20px;
+        display: flex;
+        align-items: center;
+        position: relative;
+      }
+
+      .terminal-buttons {
+        display: flex;
+        gap: 6px;
+      }
+
+      .terminal-buttons span {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--border-active);
+      }
+
+      .terminal-title {
+        position: absolute;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        color: var(--fg-muted);
+        pointer-events: none;
+      }
+
+      .terminal-body {
+        background: #000000;
+        padding: 24px;
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        text-align: left;
+        line-height: 1.6;
+      }
+
+      .term-line {
+        margin-bottom: 8px;
+      }
+
+      .term-prompt {
+        color: var(--accent-blue);
+        font-weight: bold;
+      }
+
+      .term-cmd {
+        color: #ffffff;
+      }
+
+      .term-output {
+        color: var(--fg-secondary);
+      }
+
+      .term-success {
+        color: var(--accent-green);
+      }
+
+      /* --- 9. Vision Statement Section --- */
+      .vision-section {
+        padding: 120px 0;
+        border-bottom: 1px solid var(--border-muted);
+      }
+
+      .vision-block {
+        max-width: 800px;
+        margin: 0 auto;
+        text-align: center;
+        position: relative;
+      }
+
+      .vision-quote-symbol {
+        font-family: var(--font-heading);
+        font-size: 6rem;
+        color: var(--fg-dark);
+        line-height: 0.1;
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        user-select: none;
+        font-weight: 800;
+      }
+
+      .vision-text {
+        font-family: var(--font-heading);
+        font-size: clamp(1.4rem, 2.2vw, 2.2rem);
+        font-weight: 400;
+        line-height: 1.45;
+        color: #ffffff;
+        margin-bottom: 24px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .vision-author {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .author-name {
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: #ffffff;
+      }
+
+      .author-title {
+        font-size: 0.8rem;
+        color: var(--fg-muted);
+        font-family: var(--font-mono);
+      }
+
+      /* --- 10. Final CTA Section --- */
+      .cta-section {
+        padding: 120px 0;
+        background-image: radial-gradient(circle at center, rgba(0, 114, 245, 0.04) 0%, transparent 60%);
+      }
+
+      .cta-card {
+        background: var(--glass-bg);
+        backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--border-muted);
+        border-radius: 16px;
+        padding: 60px 40px;
+        text-align: center;
+        max-width: 840px;
+        margin: 0 auto;
+        box-shadow: var(--shadow-premium);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .cta-card h2 {
+        font-size: clamp(2rem, 3.5vw, 2.5rem);
+        margin-bottom: 16px;
+      }
+
+      .cta-card p {
+        color: var(--fg-secondary);
+        font-size: 1.05rem;
+        max-width: 500px;
+        margin-bottom: 32px;
+      }
+
+      .cli-command-box {
+        display: flex;
+        background: #000000;
+        border: 1px solid var(--border-muted);
+        border-radius: 8px;
+        padding: 6px 6px 6px 16px;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 40px;
+        max-width: 380px;
+        width: 100%;
+      }
+
+      .cli-cmd-text {
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        color: #ffffff;
+        flex-grow: 1;
+        text-align: left;
+      }
+
+      .cli-copy-btn {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border-muted);
+        color: var(--fg-secondary);
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        padding: 6px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s ease;
+      }
+
+      .cli-copy-btn:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: #ffffff;
+        border-color: var(--border-active);
+      }
+
+      .cta-actions {
+        display: flex;
+        gap: 16px;
+      }
+
+      /* --- Footer --- */
+      .footer {
+        background: #000000;
+        border-top: 1px solid var(--border-muted);
+        padding: 80px 0 40px 0;
+      }
+
+      .footer-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 24px;
+        display: flex;
+        justify-content: space-between;
+        gap: 48px;
+        margin-bottom: 60px;
+      }
+
+      .footer-brand {
+        max-width: 320px;
+      }
+
+      .footer-tagline {
+        margin-top: 16px;
+        font-size: 0.85rem;
+        color: var(--fg-muted);
+      }
+
+      .footer-links {
+        display: flex;
+        gap: 80px;
+      }
+
+      .link-column {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .link-column h4 {
+        font-size: 0.85rem;
+        font-family: var(--font-mono);
+        text-transform: uppercase;
+        color: var(--fg-muted);
+        letter-spacing: 0.05em;
+        margin-bottom: 8px;
+      }
+
+      .link-column a {
+        color: var(--fg-secondary);
+        font-size: 0.85rem;
+        text-decoration: none;
+        transition: color 0.2s ease;
+      }
+
+      .link-column a:hover {
+        color: #ffffff;
+      }
+
+      .footer-bottom {
+        border-top: 1px solid rgba(255,255,255,0.03);
+        padding-top: 40px;
+      }
+
+      .footer-bottom-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .copyright {
+        font-size: 0.8rem;
+        color: var(--fg-muted);
+      }
+
+      .social-links {
+        display: flex;
+        gap: 16px;
+      }
+
+      .social-links a {
+        color: var(--fg-muted);
+        transition: color 0.2s ease;
+      }
+
+      .social-links a:hover {
+        color: #ffffff;
+      }
+
+      /* --- Scroll Reveal & Fade-In Animations --- */
+      .scroll-reveal {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .scroll-reveal.revealed {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      /* --- Responsive Layout Rules --- */
+      @media (max-width: 1024px) {
+        .hero-grid {
+          grid-template-columns: 1fr;
+          text-align: center;
+          gap: 40px;
+        }
+        .hero-info {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+        .hero-subtitle {
+          margin-left: auto;
+          margin-right: auto;
+        }
+        .hero-actions {
+          justify-content: center;
+        }
+        .demo-workspace {
+          grid-template-columns: 1fr;
+        }
+        .problem-grid {
+          grid-template-columns: 1fr;
+        }
+        .how-grid {
+          grid-template-columns: 1fr;
+          gap: 32px;
+        }
+        .ir-grid {
+          grid-template-columns: 1fr;
+        }
+        .bento-grid {
+          grid-template-columns: 1fr;
+          grid-auto-rows: auto;
+        }
+        .bento-large, .bento-medium, .bento-small {
+          grid-column: span 1;
+          height: auto;
+          gap: 20px;
+        }
+        .footer-container {
+          flex-direction: column;
+          gap: 40px;
+        }
+        .footer-links {
+          flex-wrap: wrap;
+          gap: 40px;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .nav-links {
+          display: none;
+        }
+        .header-container {
+          justify-content: space-between;
+        }
+        .footer-bottom-container {
+          flex-direction: column;
+          gap: 16px;
+          text-align: center;
+        }
+      }
+    </style>
   </head>
   <body class="dark bg-black">
     <!-- Glow effects -->
@@ -52,10 +1746,10 @@
           <div class="hero-info">
             <div class="hero-tag">
               <span class="badge-dot"></span>
-              <span class="badge-text">v1.2.0: Now with Edge Resolution</span>
+              <span class="badge-text">v1.2.0: Claude Opus 4.7 + ephemeral prompt cache + Zod-validated IR</span>
             </div>
             <h1 class="hero-title">Frontend personalization without frontend customization.</h1>
-            <p class="hero-subtitle">Fluid generates user-specific interfaces from a single schema. Ship one capability definition and let AI create the right UI for every user.</p>
+            <p class="hero-subtitle">Fluid runs a dual-path engine: preset archetypes return instantly without LLM calls, while novel intents compile through Claude Opus 4.7 into Zod-validated IR and render with FluidView.</p>
             <div class="hero-actions">
               <a href="#demo" class="btn btn-primary">Start Building</a>
               <a href="#demo" class="btn btn-secondary">
@@ -79,7 +1773,7 @@
                   <div class="node-icon">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                   </div>
-                  <div class="node-label">Schema</div>
+                  <div class="node-label">Schema JSON</div>
                 </div>
 
                 <!-- Path 1 -->
@@ -100,12 +1794,12 @@
                   <div class="pulse-dot"></div>
                 </div>
 
-                <!-- Node: AI Engine -->
+                <!-- Node: AI Engine (Claude) -->
                 <div class="arch-node" id="node-engine">
                   <div class="node-icon">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line></svg>
                   </div>
-                  <div class="node-label">AI Engine</div>
+                  <div class="node-label">Claude Opus 4.7</div>
                 </div>
 
                 <!-- Path 3 -->
@@ -113,12 +1807,12 @@
                   <div class="pulse-dot"></div>
                 </div>
 
-                <!-- Node: IR -->
-                <div class="arch-node" id="node-ir">
+                <!-- Node: Zod Validator -->
+                <div class="arch-node" id="node-validator">
                   <div class="node-icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
                   </div>
-                  <div class="node-label">Fluid IR</div>
+                  <div class="node-label">Zod Validator</div>
                 </div>
 
                 <!-- Path 4 -->
@@ -126,12 +1820,12 @@
                   <div class="pulse-dot"></div>
                 </div>
 
-                <!-- Node: UI -->
+                <!-- Node: UI Render -->
                 <div class="arch-node" id="node-ui">
                   <div class="node-icon">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line><path d="M8 21h8"></path><line x1="12" y1="17" x2="12" y2="21"></line></svg>
                   </div>
-                  <div class="node-label">Personalized UI</div>
+                  <div class="node-label">&lt;FluidView ir data /&gt;</div>
                 </div>
               </div>
             </div>
@@ -144,7 +1838,7 @@
         <div class="section-container">
           <div class="section-header">
             <h2 class="section-title">See the Compiler in Action</h2>
-            <p class="section-desc">Select a core capability schema, specify context or user intent, and watch the AI engine compile and render a context-optimized interface in real-time.</p>
+            <p class="section-desc">Select a schema and intent, then watch the engine build an intent hash, check 1-hour IR cache, and only call Claude on misses before validating JSON IR with Zod and rendering via FluidView.</p>
           </div>
 
           <div class="demo-workspace">
@@ -201,29 +1895,29 @@
               <div class="panel-content compiler-logs">
                 <div class="log-item" id="log-step-1">
                   <span class="log-bullet">●</span>
-                  <span class="log-text">Analyzing capability schema...</span>
+                  <span class="log-text">Build cache key: ir:{schema}:{sha256(intent)[:16]}</span>
                   <span class="log-status">DONE</span>
                 </div>
                 <div class="log-item" id="log-step-2">
                   <span class="log-bullet">●</span>
-                  <span class="log-text">Parsing intent payload...</span>
+                  <span class="log-text">Check in-memory IR cache (TTL: 1 hour)</span>
                   <span class="log-status">DONE</span>
                 </div>
                 <div class="log-item" id="log-step-3">
                   <span class="log-bullet">●</span>
-                  <span class="log-text">Resolving UI rulesets...</span>
+                  <span class="log-text">Call Anthropic provider (claude-opus-4-7 stream)</span>
                   <span class="log-status">DONE</span>
                 </div>
                 <div class="log-item" id="log-step-4">
                   <span class="log-bullet">●</span>
-                  <span class="log-text">Compiling Intermediate Rep (IR)...</span>
+                  <span class="log-text">Parse JSON + Zod validate (retry once on failure)</span>
                   <span class="log-status">DONE</span>
                 </div>
                 <div class="compiler-meter">
                   <div class="meter-bar"></div>
                 </div>
                 <div class="ir-inspect-box">
-                  <div class="ir-box-header">Compiled IR Extract</div>
+                  <div class="ir-box-header">Compiled Fluid IR</div>
                   <pre class="ir-box-code"><code id="compiled-ir-display"></code></pre>
                 </div>
               </div>
@@ -232,8 +1926,8 @@
             <!-- Workspace Right: Preview -->
             <div class="demo-panel demo-preview">
               <div class="panel-header">
-                <span class="panel-title">3. PERSONALIZED OUTPUT UI</span>
-                <span class="preview-badge">LIVE RENDER</span>
+                <span class="panel-title">3. FluidView RENDER</span>
+                <span class="preview-badge" id="latency-badge">LIVE RENDER</span>
               </div>
               <div class="panel-content preview-area">
                 <div class="device-mockup">
@@ -280,14 +1974,15 @@ if (user.isMobile && user.geo === 'JP') {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-success"><polyline points="20 6 9 17 4 12"></polyline></svg>
                 <span>Fluid Architecture (Schema Driven)</span>
               </div>
-              <h3>Single Declarative Schema</h3>
+              <h3>Declarative Schema Renderer</h3>
               <p>Define what the interface is capable of doing once. Fluid handles the evaluation, constraints, and dynamic generation of the view layer at the edge. Clean client codebase with 0kb layout engine overhead.</p>
               <div class="problem-code-visual">
                 <pre><code>//  Fluid Edge Architecture
-// One renderer, zero conditional bundle sprawl.
-&lt;FluidRenderer 
-  capability="checkout" 
-  context={userContext} 
+// Single React component resolves context and renders valid IR
+&lt;FluidView 
+  schema={paymentSchema}
+  intent={userIntent} 
+  data={runtimeData}
 /&gt;</code></pre>
               </div>
             </div>
@@ -299,25 +1994,25 @@ if (user.isMobile && user.geo === 'JP') {
       <section id="how-it-works" class="how-section scroll-reveal">
         <div class="section-container">
           <div class="section-header">
-            <h2 class="section-title">The Three-Step Cycle</h2>
-            <p class="section-desc">How Fluid delivers native-speed, custom layouts on-the-fly without running client-side LLMs.</p>
+            <h2 class="section-title">The Boundary-Safe Cycle</h2>
+            <p class="section-desc">How Fluid enforces schema-to-engine, LLM-to-IR, and IR-to-renderer boundaries while keeping latency low.</p>
           </div>
 
           <div class="how-grid">
             <div class="how-step">
               <div class="step-num">01</div>
-              <h4>Define Capability</h4>
-              <p>Write a standard schema representing your business actions. Fields, actions, and validations are fully typed in TypeScript and uploaded to Fluid registry.</p>
+              <h4>Schema Defines Capability</h4>
+              <p>Define entities, fields, and endpoints once. The prompt builder uses this schema so generation can only reference declared capability boundaries.</p>
             </div>
             <div class="how-step">
               <div class="step-num">02</div>
-              <h4>Supply Context & Intent</h4>
-              <p>Send user device specifications, historical interactions, regional data, and explicit requests to our edge resolution nodes.</p>
+              <h4>Normalize Intent, Then Cache</h4>
+              <p>Normalize user intent, derive the key ir:{schema}:{sha256(intent)[:16]}, and short-circuit to cached IR when available.</p>
             </div>
             <div class="how-step">
               <div class="step-num">03</div>
-              <h4>Compile & Render</h4>
-              <p>The compiler evaluates rules, runs layout compilation, outputs a secure JSON-based IR, and your SDK paints the view instantly.</p>
+              <h4>Generate, Validate, Render</h4>
+              <p>On cache miss, stream IR from Claude, strip code fences, parse JSON, validate with Zod, retry once on validation errors, then render via recursive FluidView nodes.</p>
             </div>
           </div>
         </div>
@@ -336,7 +2031,7 @@ if (user.isMobile && user.geo === 'JP') {
               <div class="code-tabs">
                 <button class="code-tab-btn active" data-tab="schema-tab">schema.ts</button>
                 <button class="code-tab-btn" data-tab="ir-tab">fluid-ir.json</button>
-                <button class="code-tab-btn" data-tab="react-tab">App.tsx</button>
+                <button class="code-tab-btn" data-tab="react-tab">FluidView.tsx</button>
               </div>
               <div class="window-actions">
                 <span class="lang-label">Typescript</span>
@@ -344,19 +2039,20 @@ if (user.isMobile && user.geo === 'JP') {
             </div>
             <div class="code-window-body">
               <!-- Tab 1: schema.ts -->
-              <pre id="code-schema-tab" class="code-block active"><code><span class="c-keyword">import</span> { defineCapability } <span class="c-keyword">from</span> <span class="c-string">"@fluid-ui/sdk"</span>;
+              <pre id="code-schema-tab" class="code-block active"><code><span class="c-keyword">import</span> { defineSchema } <span class="c-keyword">from</span> <span class="c-string">"@fluid/core"</span>;
 
-<span class="c-keyword">export const</span> feedbackForm = defineCapability({
+<span class="c-keyword">export const</span> feedbackSchema = defineSchema({
   id: <span class="c-string">"user-feedback"</span>,
-  version: <span class="c-string">"1.2.0"</span>,
-  fields: {
-    rating: { type: <span class="c-string">"integer"</span>, min: 1, max: 5, required: <span class="c-keyword">true</span> },
-    message: { type: <span class="c-string">"string"</span>, required: <span class="c-keyword">true</span> },
-    email: { type: <span class="c-string">"email"</span>, required: <span class="c-keyword">false</span> }
+  entities: {
+    Feedback: {
+      rating: { type: <span class="c-string">"integer"</span>, required: <span class="c-keyword">true</span> },
+      message: { type: <span class="c-string">"string"</span>, required: <span class="c-keyword">true</span> },
+      email: { type: <span class="c-string">"string"</span>, required: <span class="c-keyword">false</span> }
+    }
   },
-  actions: {
+  endpoints: {
     submit: {
-      endpoint: <span class="c-string">"/api/feedback"</span>,
+      path: <span class="c-string">"/api/feedback"</span>,
       method: <span class="c-string">"POST"</span>
     }
   }
@@ -393,23 +2089,19 @@ if (user.isMobile && user.geo === 'JP') {
   ]
 }</code></pre>
 
-              <!-- Tab 3: App.tsx -->
-              <pre id="code-react-tab" class="code-block"><code><span class="c-keyword">import</span> { FluidRenderer, useFluid } <span class="c-keyword">from</span> <span class="c-string">"@fluid-ui/react"</span>;
+              <!-- Tab 3: FluidView.tsx -->
+              <pre id="code-react-tab" class="code-block"><code><span class="c-keyword">import</span> { FluidView } <span class="c-keyword">from</span> <span class="c-string">"@fluid/react"</span>;
+<span class="c-keyword">import</span> { feedbackSchema } <span class="c-keyword">from</span> <span class="c-string">"./schema"</span>;
 
 <span class="c-keyword">export default function</span> App() {
-  <span class="c-comment">// Instantly fetches compiled IR and handles action execution securely</span>
-  <span class="c-keyword">const</span> { ir, loading, executeAction } = useFluid({
-    capability: <span class="c-string">"user-feedback"</span>,
-    context: { device: <span class="c-string">"desktop"</span>, isOutageActive: <span class="c-keyword">true</span> }
-  });
-
-  <span class="c-keyword">if</span> (loading) <span class="c-keyword">return</span> &lt;<span class="c-tag">div</span>&gt;Loading Fluid interface...&lt;/<span class="c-tag">div</span>&gt;;
-
+  <span class="c-keyword">const</span> userIntent = <span class="c-string">"Emergency outage feedback on mobile screen"</span>;
+  
   <span class="c-keyword">return</span> (
     &lt;<span class="c-tag">main</span> <span class="c-attr">className</span>=<span class="c-string">"dark bg-black p-12"</span>&gt;
-      &lt;<span class="c-tag">FluidRenderer</span> 
-        <span class="c-attr">ir</span>={ir} 
-        <span class="c-attr">onAction</span>={executeAction} 
+      &lt;<span class="c-tag">FluidView</span> 
+        <span class="c-attr">schema</span>={feedbackSchema} 
+        <span class="c-attr">intent</span>={userIntent}
+        <span class="c-attr">data</span>={{}}
       /&gt;
     &lt;/<span class="c-tag">main</span>&gt;
   );
@@ -433,15 +2125,15 @@ if (user.isMobile && user.geo === 'JP') {
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
               </div>
               <h4>Deterministic Sandbox</h4>
-              <p>Since the output is a JSON-based schema, it runs within a sandbox with strict capability boundaries. Code injections, broken third-party script runs, and unexpected client crashes are mathematically impossible.</p>
+              <p>Since the output is a JSON-based schema, it runs within a sandbox with strict boundaries. Code injections, script runs, and unexpected crashes are mathematically impossible.</p>
             </div>
 
             <div class="ir-card">
               <div class="ir-card-icon">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
               </div>
-              <h4>Edge-Cacheable Layouts</h4>
-              <p>Dynamic evaluations take place in Vercel / Cloudflare Edge Workers in under 5ms. The resulting IR payload is tiny (typically less than 2KB), resulting in faster page loads and zero bundle hydration lag.</p>
+              <h4>Dual-Layer Caching</h4>
+              <p>Saves resolved layouts in Map/Redis edge cache for 1 hour. Normalizes client-side spaces and case options to resolve intents inside 2ms, bypassing the LLM entirely.</p>
             </div>
 
             <div class="ir-card">
@@ -467,16 +2159,16 @@ if (user.isMobile && user.geo === 'JP') {
             <!-- Box 1: Edge Computing -->
             <div class="bento-box bento-large">
               <div class="bento-content">
-                <div class="bento-badge">Speed</div>
-                <h3>Edge-compiled in 1.4ms</h3>
-                <p>Resolution happens at global edge nodes. Fluid measures latency in microseconds, generating personalized screens way ahead of initial byte reception on the browser.</p>
+                <div class="bento-badge">Performance</div>
+                <h3>1.4ms Cache Resolution</h3>
+                <p>Hot path resolution hits edge Map/Redis cache under 2ms. Cold path uses Ephemeral prompt caching to lower streaming time to 5s while reducing Anthropic API input costs.</p>
                 <div class="bento-viz latency-viz">
                   <div class="latency-line">
-                    <span class="l-label">Traditional SSR</span>
-                    <div class="l-bar l-red" style="width: 80%"><span>120ms</span></div>
+                    <span class="l-label">Claude Opus Cold Path</span>
+                    <div class="l-bar l-red" style="width: 80%"><span>8,200ms</span></div>
                   </div>
                   <div class="latency-line">
-                    <span class="l-label">Fluid Edge Resolution</span>
+                    <span class="l-label">IR Cache HIT</span>
                     <div class="l-bar l-blue" style="width: 15%"><span>1.4ms</span></div>
                   </div>
                 </div>
@@ -487,17 +2179,17 @@ if (user.isMobile && user.geo === 'JP') {
             <div class="bento-box bento-small">
               <div class="bento-content">
                 <div class="bento-badge">Type Safety</div>
-                <h3>100% Type-Safe</h3>
-                <p>Automatic TypeScript binding generator makes sure frontend actions match backend schema APIs precisely. Any schema drift will fail compile builds.</p>
+                <h3>Zod Constraints</h3>
+                <p>Enforce strict layer boundaries. Every JSON output from the LLM is validated against schemas with Zod, throwing errors if non-declared fields are used.</p>
               </div>
             </div>
 
             <!-- Box 3: OpenTelemetry -->
             <div class="bento-box bento-small">
               <div class="bento-content">
-                <div class="bento-badge">Observability</div>
-                <h3>OpenTelemetry Tracing</h3>
-                <p>Trace why specific components were selected. Out-of-the-box logs expose intent tokens, rendering rules, and rendering scores in your Datadog or honeycomb console.</p>
+                <div class="bento-badge">Security</div>
+                <h3>Malicious Safe</h3>
+                <p>LLMs cannot run script code, read environment secrets, or execute arbitrary HTTP fetches. Only developer-authored endpoints can run from the React client.</p>
               </div>
             </div>
 
@@ -509,10 +2201,9 @@ if (user.isMobile && user.geo === 'JP') {
                 <p>Deliver identical personalization schemas to React, Solid, iOS Swift, and Android Jetpack layouts. Ensure perfect architectural cohesion across mobile, desktop and web apps.</p>
                 <div class="sdk-icons">
                   <span>React</span>
-                  <span>Next.js</span>
-                  <span>Swift</span>
-                  <span>Kotlin</span>
-                  <span>Vue</span>
+                  <span>SwiftUI</span>
+                  <span>Jetpack Compose</span>
+                  <span>Flutter</span>
                 </div>
               </div>
             </div>
@@ -521,8 +2212,8 @@ if (user.isMobile && user.geo === 'JP') {
             <div class="bento-box bento-medium">
               <div class="bento-content">
                 <div class="bento-badge">Extensibility</div>
-                <h3>Bring Your Own Component (BYOC)</h3>
-                <p>Register your core components to the Fluid workspace. The compiler will structure and style your designs, preserving custom branding, tokens, and animations.</p>
+                <h3>Recursive renderNode()</h3>
+                <p>Map JSON elements to native React element structures using a clean switch statement. Easily register custom components into the registry without modifying core validation.</p>
               </div>
             </div>
           </div>
@@ -548,7 +2239,7 @@ if (user.isMobile && user.geo === 'JP') {
             </div>
             <div class="terminal-body" id="dx-terminal">
               <!-- Content filled via JavaScript animation -->
-              <div class="term-line"><span class="term-prompt">$</span> <span class="term-cmd">npm install -g @fluid-ui/cli</span></div>
+              <div class="term-line"><span class="term-prompt">$</span> <span class="term-cmd">npm install -g @fluid/cli</span></div>
               <div class="term-line term-output">added 24 packages in 1.2s</div>
               <div class="term-line"><span class="term-prompt">$</span> <span class="term-cmd">fluid push ./schemas</span></div>
               <div class="term-line term-output">✓ Discovered 3 interfaces in `./schemas`</div>
@@ -583,7 +2274,7 @@ if (user.isMobile && user.geo === 'JP') {
             <p>Deploy your first capability schema in 5 minutes. Start personalizing experiences without frontend refactoring cycles.</p>
             
             <div class="cli-command-box">
-              <code class="cli-cmd-text" id="cli-cmd-copy">npm install @fluid-ui/react</code>
+              <code class="cli-cmd-text" id="cli-cmd-copy">npm install @fluid/react</code>
               <button class="cli-copy-btn" id="cli-copy-trigger">
                 <span id="copy-btn-text">Copy</span>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="copy-icon"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
@@ -654,6 +2345,866 @@ if (user.isMobile && user.geo === 'JP') {
       </div>
     </footer>
 
-    <script type="module" src="/src/main.js"></script>
+    <script>
+      /* ==========================================================================
+         Dataset: Interactive Compiler Presets (Aligned with ARCHITECTURE.md)
+         ========================================================================== */
+
+      const PRESETS = {
+        checkout: {
+          fileName: "payment_gateway.ts",
+          schema: {
+            "id": "payment_gateway",
+            "version": "1.2.0",
+            "entities": {
+              "Transaction": {
+                "amount": { "type": "float", "required": true },
+                "currency": { "type": "string", "required": true },
+                "payment_method": { "type": "select", "options": ["card", "paypal", "wire"], "required": true },
+                "billing_zip": { "type": "string", "required": false }
+              }
+            },
+            "endpoints": {
+              "process_payment": {
+                "path": "/api/payments",
+                "method": "POST"
+              }
+            }
+          },
+          intents: {
+            standard: {
+              name: "Intent A: US Web Pro",
+              emoji: "💻",
+              description: "Desktop browser, US user, high-speed connection. Requesting advanced payment options with full billing layout.",
+              device: "desktop",
+              intentText: "standard credit checkout for web users in US region",
+              usage: { "thinking_tokens": 820, "input_tokens": 1420, "output_tokens": 480 },
+              latencyMs: 8200,
+              ir: {
+                "$schema": "https://fluid.dev/ir/v1.json",
+                "id": "payment_gateway",
+                "layout": { "style": "glassmorphic", "width": "desktop" },
+                "components": [
+                  { "type": "heading", "content": "Complete Checkout" },
+                  { "type": "label", "text": "Select payment method" },
+                  { "type": "payment_methods", "options": ["Credit Card", "PayPal", "Wire"] },
+                  { "type": "input", "placeholder": "Cardholder Name" },
+                  { "type": "input", "placeholder": "Card Number (•••• •••• •••• ••••)" },
+                  { "type": "row", "children": [
+                    { "type": "input", "placeholder": "MM/YY" },
+                    { "type": "input", "placeholder": "CVC" }
+                  ]},
+                  { "type": "button", "label": "Pay $49.00 USD", "variant": "primary" }
+                ]
+              }
+            },
+            mobile: {
+              name: "Intent B: Tokyo Mobile",
+              emoji: "📱",
+              description: "Mobile device, Tokyo location, transit network. Requesting instant local payment methods, avoiding text fields.",
+              device: "mobile",
+              intentText: "mobile one-click checkout in yen on commuter network",
+              usage: { "thinking_tokens": 640, "input_tokens": 1420, "output_tokens": 310 },
+              latencyMs: 5800,
+              ir: {
+                "$schema": "https://fluid.dev/ir/v1.json",
+                "id": "payment_gateway",
+                "layout": { "style": "compact", "width": "mobile" },
+                "components": [
+                  { "type": "heading", "content": "クイック決済" },
+                  { "type": "express_button", "provider": "Apple Pay" },
+                  { "type": "express_button", "provider": "LINE Pay" },
+                  { "type": "divider", "text": "または通常決済" },
+                  { "type": "button", "label": "¥5,400 支払う", "variant": "primary" }
+                ]
+              }
+            },
+            outage: {
+              name: "Intent C: Outage Mode",
+              emoji: "🚨",
+              description: "Edge networks degraded. Requesting emergency fallback checkout capability using offline-first deferred credit authorizations.",
+              device: "desktop",
+              intentText: "degraded service mode with billing queue deferred actions",
+              usage: { "thinking_tokens": 980, "input_tokens": 1580, "output_tokens": 360 },
+              latencyMs: 9100,
+              ir: {
+                "$schema": "https://fluid.dev/ir/v1.json",
+                "id": "payment_gateway",
+                "layout": { "style": "warning-dense", "width": "desktop" },
+                "components": [
+                  { "type": "alert", "content": "Payment API degraded. Running in offline grace mode.", "status": "danger" },
+                  { "type": "input", "placeholder": "Email Address for Receipt" },
+                  { "type": "button", "label": "Queue Deferred Transaction", "variant": "danger" }
+                ]
+              }
+            }
+          }
+        },
+        dashboard: {
+          fileName: "metrics_collector.ts",
+          schema: {
+            "id": "metrics_collector",
+            "version": "2.4.1",
+            "entities": {
+              "Telemetry": {
+                "resolution": { "type": "string", "required": true },
+                "host_id": { "type": "string", "required": true },
+                "metric_type": { "type": "string", "required": true },
+                "timestamp": { "type": "datetime", "required": true }
+              }
+            },
+            "endpoints": {
+              "fetch_telemetry": {
+                "path": "/api/telemetry/query",
+                "method": "POST"
+              }
+            }
+          },
+          intents: {
+            standard: {
+              name: "Intent A: US Web Pro",
+              emoji: "💻",
+              description: "Desktop browser, SRE developer. Requests dense telemetry view with granular latency histograms and action items.",
+              device: "desktop",
+              intentText: "dense telemetry metrics list with edge latency spikes",
+              usage: { "thinking_tokens": 1050, "input_tokens": 1390, "output_tokens": 580 },
+              latencyMs: 7600,
+              ir: {
+                "$schema": "https://fluid.dev/ir/v1.json",
+                "id": "metrics_collector",
+                "layout": { "style": "technical", "width": "desktop" },
+                "components": [
+                  { "type": "heading", "content": "P99 Edge Latency (ms)" },
+                  { "type": "chart", "values": [12, 14, 9, 18, 33, 15, 11], "danger": false },
+                  { "type": "label", "text": "Edge Node Logs" },
+                  { "type": "logs", "lines": [
+                    "22:31:02 [GET] /ir/resolve - 200 OK (1.4ms)",
+                    "22:31:05 [GET] /ir/resolve - 200 OK (1.1ms)",
+                    "22:31:08 [GET] /ir/resolve - 304 Cache HIT"
+                  ]},
+                  { "type": "button", "label": "Download CSV Log Dump", "variant": "secondary" }
+                ]
+              }
+            },
+            mobile: {
+              name: "Intent B: Tokyo Mobile",
+              emoji: "📱",
+              description: "Mobile viewport. Requests a simple, read-only status metric to quickly verify infrastructure health on-the-go.",
+              device: "mobile",
+              intentText: "radial summary metric gauge of cluster health mobile view",
+              usage: { "thinking_tokens": 550, "input_tokens": 1390, "output_tokens": 280 },
+              latencyMs: 4900,
+              ir: {
+                "$schema": "https://fluid.dev/ir/v1.json",
+                "id": "metrics_collector",
+                "layout": { "style": "radial-summary", "width": "mobile" },
+                "components": [
+                  { "type": "heading", "content": "System Health" },
+                  { "type": "metric_value", "label": "Edge API uptime", "value": "99.98%" },
+                  { "type": "label", "text": "All global edge nodes online" },
+                  { "type": "button", "label": "Open PagerDuty Dashboard", "variant": "primary" }
+                ]
+              }
+            },
+            outage: {
+              name: "Intent C: Outage Mode",
+              emoji: "🚨",
+              description: "High load/incident detected. Renders alert panel highlighting latency spike anomalies and primary emergency actions.",
+              device: "desktop",
+              intentText: "critical latency incident alert and traffic reroute actions",
+              usage: { "thinking_tokens": 1120, "input_tokens": 1540, "output_tokens": 420 },
+              latencyMs: 8400,
+              ir: {
+                "$schema": "https://fluid.dev/ir/v1.json",
+                "id": "metrics_collector",
+                "layout": { "style": "incident-level-1", "width": "desktop" },
+                "components": [
+                  { "type": "alert", "content": "Critical spike: US-West Edge Latency > 850ms", "status": "danger" },
+                  { "type": "chart", "values": [15, 18, 22, 19, 95, 99, 98], "danger": true },
+                  { "type": "button", "label": "Reroute Traffic instantly", "variant": "danger" }
+                ]
+              }
+            }
+          }
+        },
+        feedback: {
+          fileName: "user_engagement.ts",
+          schema: {
+            "id": "user_engagement",
+            "version": "1.0.2",
+            "entities": {
+              "Response": {
+                "rating": { "type": "integer", "required": true },
+                "comment": { "type": "string", "required": true },
+                "incident_code": { "type": "string", "required": false }
+              }
+            },
+            "endpoints": {
+              "submit_feedback": {
+                "path": "/api/engagement/feedback",
+                "method": "POST"
+              }
+            }
+          },
+          intents: {
+            standard: {
+              name: "Intent A: US Web Pro",
+              emoji: "💻",
+              description: "Desktop browser, satisfied experience indicators. Renders star selection widget and input comment fields.",
+              device: "desktop",
+              intentText: "classic desktop developer rating form with stars selector",
+              usage: { "thinking_tokens": 760, "input_tokens": 1410, "output_tokens": 430 },
+              latencyMs: 6900,
+              ir: {
+                "$schema": "https://fluid.dev/ir/v1.json",
+                "id": "user_engagement",
+                "layout": { "style": "glassmorphic", "width": "desktop" },
+                "components": [
+                  { "type": "heading", "content": "Rate Fluid Engine" },
+                  { "type": "stars", "label": "Select stars rating", "count": 5 },
+                  { "type": "textarea", "placeholder": "What features can we improve?" },
+                  { "type": "button", "label": "Submit Feedback", "variant": "primary" }
+                ]
+              }
+            },
+            mobile: {
+              name: "Intent B: Tokyo Mobile",
+              emoji: "📱",
+              description: "Mobile viewport, satisfied developer context. Displays a quick single-tap emoji reaction selector to maximize click rates.",
+              device: "mobile",
+              intentText: "mobile friendly fast reaction emoji grid select metrics",
+              usage: { "thinking_tokens": 480, "input_tokens": 1410, "output_tokens": 290 },
+              latencyMs: 4100,
+              ir: {
+                "$schema": "https://fluid.dev/ir/v1.json",
+                "id": "user_engagement",
+                "layout": { "style": "emoji-grid", "width": "mobile" },
+                "components": [
+                  { "type": "heading", "content": "How's the experience?" },
+                  { "type": "emojis", "options": ["😢", "😐", "😊", "🚀"] },
+                  { "type": "button", "label": "Submit Quick Rating", "variant": "primary" }
+                ]
+              }
+            },
+            outage: {
+              name: "Intent C: Outage Mode",
+              emoji: "🚨",
+              description: "Incident scenario. Replaces standard product feedback with a critical incident support ticket submission layout.",
+              device: "desktop",
+              intentText: "incident reports collection form SLA alert on desktop",
+              usage: { "thinking_tokens": 990, "input_tokens": 1560, "output_tokens": 390 },
+              latencyMs: 7800,
+              ir: {
+                "$schema": "https://fluid.dev/ir/v1.json",
+                "id": "user_engagement",
+                "layout": { "style": "escalation-support", "width": "desktop" },
+                "components": [
+                  { "type": "alert", "content": "Operational outage active. Support SLA Response: < 15 mins", "status": "danger" },
+                  { "type": "textarea", "placeholder": "Describe stack impact and error logs..." },
+                  { "type": "button", "label": "Escalate Ticket to On-Call SRE", "variant": "danger" }
+                ]
+              }
+            }
+          }
+        }
+      };
+
+      /* ==========================================================================
+         State Management & Interactive Demo Engine
+         ========================================================================== */
+
+      let activePresetKey = 'checkout';
+      let activeIntentKey = 'standard';
+      let compileTimer = null;
+
+      // Simulated Memory Cache representing Redis/Local Map cache (1h TTL)
+      const applicationCache = new Map();
+
+      // DOM Elements
+      const schemaPresetSelect = document.getElementById('schema-preset');
+      const schemaCodeDisplay = document.getElementById('schema-code-display');
+      const intentDescElement = document.getElementById('intent-description');
+      const irCodeDisplay = document.getElementById('compiled-ir-display');
+      const previewViewport = document.getElementById('preview-viewport');
+      const intentButtons = document.querySelectorAll('.intent-btn');
+      const meterBar = document.querySelector('.meter-bar');
+      const latencyBadge = document.getElementById('latency-badge');
+
+      const logStep1 = document.getElementById('log-step-1');
+      const logStep2 = document.getElementById('log-step-2');
+      const logStep3 = document.getElementById('log-step-3');
+      const logStep4 = document.getElementById('log-step-4');
+
+      /**
+       * Simple Hash simulator to yield reproducible 16-char hashes matching:
+       * ir:{schema}:{sha256(intent)[:16]}
+       */
+      function simulateHash(schemaId, intentText) {
+        let hash = 0;
+        const merged = `${schemaId}:${intentText.trim().toLowerCase()}`;
+        for (let i = 0; i < merged.length; i++) {
+          const char = merged.charCodeAt(i);
+          hash = (hash << 5) - hash + char;
+          hash = hash & hash;
+        }
+        return `ir:${schemaId}:${Math.abs(hash).toString(16).padEnd(16, '0').slice(0, 16)}`;
+      }
+
+      /**
+       * Initialize Demo Workspace
+       */
+      function initDemo() {
+        schemaPresetSelect.addEventListener('change', (e) => {
+          activePresetKey = e.target.value;
+          activeIntentKey = 'standard';
+          updateIntentButtonsMarkup();
+          triggerCompilation();
+        });
+
+        intentButtons.forEach((btn, idx) => {
+          btn.addEventListener('click', () => {
+            const intentKeys = ['standard', 'mobile', 'outage'];
+            activeIntentKey = intentKeys[idx];
+            
+            intentButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            triggerCompilation();
+          });
+        });
+
+        updateIntentButtonsMarkup();
+        triggerCompilation();
+      }
+
+      /**
+       * Update the button labels with correct emojis based on selected preset
+       */
+      function updateIntentButtonsMarkup() {
+        const preset = PRESETS[activePresetKey];
+        intentButtons.forEach((btn, idx) => {
+          const keys = ['standard', 'mobile', 'outage'];
+          const key = keys[idx];
+          const data = preset.intents[key];
+          
+          const iconSpan = btn.querySelector('.intent-icon');
+          const nameSpan = btn.querySelector('.intent-name');
+          
+          if (iconSpan) iconSpan.textContent = data.emoji;
+          if (nameSpan) nameSpan.textContent = data.name;
+
+          if (key === activeIntentKey) {
+            btn.classList.add('active');
+          } else {
+            btn.classList.remove('active');
+          }
+        });
+      }
+
+      /**
+       * Run Compilation Simulation
+       */
+      function triggerCompilation() {
+        const preset = PRESETS[activePresetKey];
+        const intentData = preset.intents[activeIntentKey];
+        
+        // 1. Calculate Cache Key
+        const cacheKey = simulateHash(preset.schema.id, intentData.intentText);
+        const cacheHit = applicationCache.has(cacheKey);
+
+        // Update Left Panel: Schema Code & Description
+        schemaCodeDisplay.textContent = JSON.stringify(preset.schema, null, 2);
+        intentDescElement.textContent = intentData.description;
+
+        if (compileTimer) clearTimeout(compileTimer);
+        meterBar.style.width = '0%';
+        
+        const steps = [logStep1, logStep2, logStep3, logStep4];
+        steps.forEach(step => {
+          step.classList.remove('active');
+          const statusSpan = step.querySelector('.log-status');
+          if (statusSpan) {
+            statusSpan.textContent = 'WAITING';
+            statusSpan.style.color = '#666666';
+          }
+        });
+
+        // Calculate speeds based on Cache HIT status
+        const runDuration = cacheHit ? 180 : 1200; // Hit resolves in 180ms, Miss in 1200ms
+        const stepDelay = cacheHit ? 40 : 250;
+
+        // Animate Compiler panel steps sequentially
+        let currentStepIndex = 0;
+        meterBar.style.transition = `width ${runDuration}ms cubic-bezier(0.25, 0.46, 0.45, 0.94)`;
+        meterBar.style.width = '100%';
+
+        // Update Compiler Log Labels dynamically to match Cache Key Hashing
+        logStep1.querySelector('.log-text').textContent = `Hash Intent: ${cacheKey}`;
+        logStep2.querySelector('.log-text').textContent = `Query IR Cache: ${cacheHit ? 'CACHE HIT' : 'CACHE MISS'}`;
+        logStep3.querySelector('.log-text').textContent = cacheHit ? `Loading cached IR tree` : `Calling Claude stream (ephemeral prompt)`;
+        logStep4.querySelector('.log-text').textContent = cacheHit ? `Bypassing Zod check` : `Validating JSON with Zod schema`;
+
+        function runStep() {
+          if (currentStepIndex < steps.length) {
+            const step = steps[currentStepIndex];
+            step.classList.add('active');
+            const statusSpan = step.querySelector('.log-status');
+            if (statusSpan) {
+              if (currentStepIndex === 1) {
+                statusSpan.textContent = cacheHit ? 'HIT' : 'MISS';
+                statusSpan.style.color = cacheHit ? 'var(--accent-cyan)' : 'var(--accent-pink)';
+              } else {
+                statusSpan.textContent = 'DONE';
+                statusSpan.style.color = 'var(--accent-green)';
+              }
+            }
+            currentStepIndex++;
+            compileTimer = setTimeout(runStep, stepDelay);
+          } else {
+            // Set to cache for subsequent clicks
+            if (!cacheHit) {
+              applicationCache.set(cacheKey, intentData.ir);
+            }
+            renderOutput(intentData, cacheHit);
+          }
+        }
+
+        runStep();
+      }
+
+      /**
+       * Render IR Code and Live UI Preview Component
+       */
+      function renderOutput(intentData, cacheHit) {
+        // Update IR Display code
+        irCodeDisplay.textContent = JSON.stringify(intentData.ir, null, 2);
+
+        // Update Latency Badge metadata
+        if (cacheHit) {
+          latencyBadge.textContent = 'CACHE HIT — 1.4ms';
+          latencyBadge.style.color = 'var(--accent-cyan)';
+          latencyBadge.style.borderColor = 'rgba(0, 223, 216, 0.3)';
+          latencyBadge.style.background = 'rgba(0, 223, 216, 0.08)';
+        } else {
+          latencyBadge.textContent = `RESOLVED — ${(intentData.latencyMs / 1000).toFixed(1)}s (Opus Stream)`;
+          latencyBadge.style.color = 'var(--accent-green)';
+          latencyBadge.style.borderColor = 'rgba(0, 255, 135, 0.3)';
+          latencyBadge.style.background = 'rgba(0, 255, 135, 0.08)';
+        }
+
+        // Resize right panel viewport based on intent device
+        if (intentData.device === 'mobile') {
+          previewViewport.className = 'device-screen device-mobile';
+        } else {
+          previewViewport.className = 'device-screen';
+        }
+
+        // Paint dynamic HTML inside viewport
+        previewViewport.innerHTML = '';
+        const container = document.createElement('div');
+        container.className = 'mock-container';
+
+        // Render Token Usage statistics if Miss path
+        if (!cacheHit) {
+          const stats = document.createElement('div');
+          stats.style.fontFamily = 'var(--font-mono)';
+          stats.style.fontSize = '0.65rem';
+          stats.style.color = 'var(--fg-muted)';
+          stats.style.borderBottom = '1px solid var(--border-muted)';
+          stats.style.paddingBottom = '8px';
+          stats.style.marginBottom = '8px';
+          stats.textContent = `Tokens — In: ${intentData.usage.input_tokens} | Thinking: ${intentData.usage.thinking_tokens} | Out: ${intentData.usage.output_tokens}`;
+          container.appendChild(stats);
+        } else {
+          const cacheNotice = document.createElement('div');
+          cacheNotice.style.fontFamily = 'var(--font-mono)';
+          cacheNotice.style.fontSize = '0.65rem';
+          cacheNotice.style.color = 'var(--accent-cyan)';
+          cacheNotice.style.borderBottom = '1px solid var(--border-muted)';
+          cacheNotice.style.paddingBottom = '8px';
+          cacheNotice.style.marginBottom = '8px';
+          cacheNotice.textContent = `Bypassed Claude generation: Loaded from Map application cache.`;
+          container.appendChild(cacheNotice);
+        }
+
+        intentData.ir.components.forEach(comp => {
+          switch (comp.type) {
+            case 'heading':
+              const title = document.createElement('h4');
+              title.className = 'mock-title';
+              title.textContent = comp.content;
+              container.appendChild(title);
+              break;
+
+            case 'label':
+              const label = document.createElement('span');
+              label.className = 'mock-label';
+              label.textContent = comp.text;
+              container.appendChild(label);
+              break;
+
+            case 'payment_methods':
+              const methodsRow = document.createElement('div');
+              methodsRow.className = 'mock-payment-row';
+              comp.options.forEach((opt, idx) => {
+                const methodCard = document.createElement('div');
+                methodCard.className = `payment-method-card ${idx === 0 ? 'active' : ''}`;
+                
+                const icon = document.createElement('div');
+                icon.style.fontSize = '1.2rem';
+                icon.textContent = opt === 'Credit Card' ? '💳' : opt === 'PayPal' ? '🅿️' : '🏦';
+                
+                const labelText = document.createElement('div');
+                labelText.className = 'method-name';
+                labelText.textContent = opt;
+                
+                methodCard.appendChild(icon);
+                methodCard.appendChild(labelText);
+                methodsRow.appendChild(methodCard);
+
+                methodCard.addEventListener('click', () => {
+                  methodsRow.querySelectorAll('.payment-method-card').forEach(c => c.classList.remove('active'));
+                  methodCard.classList.add('active');
+                });
+              });
+              container.appendChild(methodsRow);
+              break;
+
+            case 'input':
+              const input = document.createElement('input');
+              input.type = 'text';
+              input.className = 'mock-input';
+              input.placeholder = comp.placeholder;
+              container.appendChild(input);
+              break;
+
+            case 'row':
+              const row = document.createElement('div');
+              row.style.display = 'flex';
+              row.style.gap = '12px';
+              comp.children.forEach(child => {
+                const childInput = document.createElement('input');
+                childInput.type = 'text';
+                childInput.className = 'mock-input';
+                childInput.placeholder = child.placeholder;
+                childInput.style.flex = '1';
+                row.appendChild(childInput);
+              });
+              container.appendChild(row);
+              break;
+
+            case 'button':
+              const btn = document.createElement('button');
+              btn.className = `mock-btn ${comp.variant === 'danger' ? 'mock-btn-danger' : ''}`;
+              btn.textContent = comp.label;
+              btn.addEventListener('click', () => {
+                btn.textContent = 'Processing...';
+                setTimeout(() => {
+                  btn.textContent = 'Success ✅';
+                  setTimeout(() => {
+                    btn.textContent = comp.label;
+                  }, 1500);
+                }, 1000);
+              });
+              container.appendChild(btn);
+              break;
+
+            case 'express_button':
+              const expBtn = document.createElement('button');
+              expBtn.className = 'mock-btn';
+              expBtn.style.background = comp.provider === 'Apple Pay' ? '#ffffff' : '#06c755';
+              expBtn.style.color = comp.provider === 'Apple Pay' ? '#000000' : '#ffffff';
+              expBtn.style.display = 'flex';
+              expBtn.style.alignItems = 'center';
+              expBtn.style.justifyContent = 'center';
+              expBtn.style.gap = '8px';
+              
+              const btnLogo = document.createElement('span');
+              btnLogo.textContent = comp.provider === 'Apple Pay' ? '🍎' : '💬';
+              const btnText = document.createElement('span');
+              btnText.textContent = `${comp.provider}で支払う`;
+              btnText.style.fontSize = '0.75rem';
+              btnText.style.fontWeight = 'bold';
+              
+              expBtn.appendChild(btnLogo);
+              expBtn.appendChild(btnText);
+              
+              expBtn.addEventListener('click', () => {
+                expBtn.style.opacity = '0.7';
+                setTimeout(() => {
+                  expBtn.style.opacity = '1';
+                  alert(`Simulated Quick Checkout with ${comp.provider}`);
+                }, 400);
+              });
+              container.appendChild(expBtn);
+              break;
+
+            case 'divider':
+              const divEl = document.createElement('div');
+              divEl.style.display = 'flex';
+              divEl.style.alignItems = 'center';
+              divEl.style.gap = '10px';
+              divEl.style.margin = '4px 0';
+              
+              const lLine = document.createElement('div');
+              lLine.style.flex = '1';
+              lLine.style.height = '1px';
+              lLine.style.background = 'var(--border-muted)';
+              
+              const divText = document.createElement('span');
+              divText.style.fontSize = '0.7rem';
+              divText.style.color = 'var(--fg-muted)';
+              divText.textContent = comp.text;
+              
+              const rLine = lLine.cloneNode();
+              
+              divEl.appendChild(lLine);
+              divEl.appendChild(divText);
+              divEl.appendChild(rLine);
+              container.appendChild(divEl);
+              break;
+
+            case 'alert':
+              const alertBox = document.createElement('div');
+              alertBox.className = 'mock-alert';
+              alertBox.innerHTML = `
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                <span>${comp.content}</span>
+              `;
+              container.appendChild(alertBox);
+              break;
+
+            case 'chart':
+              const chartBox = document.createElement('div');
+              chartBox.className = 'chart-box';
+              const barsCont = document.createElement('div');
+              barsCont.className = 'chart-bars';
+              
+              comp.values.forEach(val => {
+                const bar = document.createElement('div');
+                bar.className = `chart-bar ${comp.danger ? 'chart-bar-danger' : ''}`;
+                bar.style.height = '0%';
+                barsCont.appendChild(bar);
+                
+                setTimeout(() => {
+                  bar.style.height = `${val}%`;
+                }, 100);
+              });
+              
+              chartBox.appendChild(barsCont);
+              container.appendChild(chartBox);
+              break;
+
+            case 'logs':
+              const logsBox = document.createElement('div');
+              logsBox.className = 'log-terminal-lines';
+              comp.lines.forEach(ln => {
+                const line = document.createElement('div');
+                line.textContent = ln;
+                logsBox.appendChild(line);
+              });
+              container.appendChild(logsBox);
+              break;
+
+            case 'metric_value':
+              const metricDiv = document.createElement('div');
+              metricDiv.style.textAlign = 'center';
+              metricDiv.style.padding = '20px 0';
+              
+              const mVal = document.createElement('h2');
+              mVal.style.fontSize = '3rem';
+              mVal.style.color = 'var(--accent-green)';
+              mVal.textContent = comp.value;
+              
+              const mLabel = document.createElement('p');
+              mLabel.style.fontSize = '0.8rem';
+              mLabel.style.color = 'var(--fg-secondary)';
+              mLabel.textContent = comp.label;
+              
+              metricDiv.appendChild(mVal);
+              metricDiv.appendChild(mLabel);
+              container.appendChild(metricDiv);
+              break;
+
+            case 'stars':
+              const starsLabel = document.createElement('span');
+              starsLabel.className = 'mock-label';
+              starsLabel.textContent = comp.label;
+              container.appendChild(starsLabel);
+
+              const starsCont = document.createElement('div');
+              starsCont.className = 'star-selector';
+              for (let i = 1; i <= comp.count; i++) {
+                const star = document.createElement('span');
+                star.textContent = '★';
+                star.dataset.index = i;
+                if (i <= 4) star.classList.add('active'); // Default 4 stars
+                starsCont.appendChild(star);
+
+                star.addEventListener('click', () => {
+                  starsCont.querySelectorAll('span').forEach((s, idx) => {
+                    if (idx < i) {
+                      s.classList.add('active');
+                    } else {
+                      s.classList.remove('active');
+                    }
+                  });
+                });
+              }
+              container.appendChild(starsCont);
+              break;
+
+            case 'textarea':
+              const area = document.createElement('textarea');
+              area.className = 'mock-input';
+              area.style.minHeight = '70px';
+              area.style.resize = 'none';
+              area.placeholder = comp.placeholder;
+              container.appendChild(area);
+              break;
+
+            case 'emojis':
+              const emojiRow = document.createElement('div');
+              emojiRow.style.display = 'flex';
+              emojiRow.style.justifyContent = 'space-around';
+              emojiRow.style.padding = '12px 0';
+              comp.options.forEach(em => {
+                const emBtn = document.createElement('button');
+                emBtn.style.fontSize = '1.8rem';
+                emBtn.style.background = 'transparent';
+                emBtn.style.border = 'none';
+                emBtn.style.cursor = 'pointer';
+                emBtn.style.transition = 'transform 0.2s';
+                emBtn.textContent = em;
+                
+                emBtn.addEventListener('click', () => {
+                  emBtn.style.transform = 'scale(1.3)';
+                  setTimeout(() => { emBtn.style.transform = 'scale(1)'; }, 200);
+                });
+                
+                emojiRow.appendChild(emBtn);
+              });
+              container.appendChild(emojiRow);
+              break;
+          }
+        });
+
+        previewViewport.appendChild(container);
+      }
+
+      /* ==========================================================================
+         Code Example Section: Tab Switcher
+         ========================================================================== */
+
+      const codeTabButtons = document.querySelectorAll('.code-tab-btn');
+      const codeBlocks = document.querySelectorAll('.code-block');
+
+      function initCodeTabs() {
+        codeTabButtons.forEach(btn => {
+          btn.addEventListener('click', () => {
+            const targetTabId = btn.dataset.tab;
+            
+            // Update active classes on buttons
+            codeTabButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Update active classes on code pre blocks
+            codeBlocks.forEach(block => {
+              if (block.id === `code-${targetTabId}`) {
+                block.classList.add('active');
+              } else {
+                block.classList.remove('active');
+              }
+            });
+
+            // Update header language label text
+            const langLabel = document.querySelector('.lang-label');
+            if (langLabel) {
+              if (targetTabId === 'schema-tab') langLabel.textContent = 'Typescript';
+              else if (targetTabId === 'ir-tab') langLabel.textContent = 'JSON Schema';
+              else if (targetTabId === 'react-tab') langLabel.textContent = 'React TSX';
+            }
+          });
+        });
+      }
+
+      /* ==========================================================================
+         CLI Command: Copy to Clipboard
+         ========================================================================== */
+
+      const cliCopyTrigger = document.getElementById('cli-copy-trigger');
+      const cliCmdText = document.getElementById('cli-cmd-copy');
+      const copyBtnText = document.getElementById('copy-btn-text');
+
+      function initClipboardCopy() {
+        if (!cliCopyTrigger || !cliCmdText) return;
+
+        cliCopyTrigger.addEventListener('click', () => {
+          const textToCopy = cliCmdText.textContent;
+          
+          navigator.clipboard.writeText(textToCopy).then(() => {
+            // Success feedback
+            copyBtnText.textContent = 'Copied!';
+            cliCopyTrigger.style.borderColor = 'var(--accent-green)';
+            cliCopyTrigger.style.color = '#ffffff';
+
+            setTimeout(() => {
+              copyBtnText.textContent = 'Copy';
+              cliCopyTrigger.style.borderColor = '';
+              cliCopyTrigger.style.color = '';
+            }, 2000);
+          }).catch(err => {
+            console.error('Failed to copy text: ', err);
+          });
+        });
+      }
+
+      /* ==========================================================================
+         Terminal Window Mock Execution Animation
+         ========================================================================== */
+
+      function animateTerminal() {
+        const terminal = document.getElementById('dx-terminal');
+        if (!terminal) return;
+
+        // Blinking cursor
+        const cursorNode = terminal.querySelector('.term-cmd:last-of-type');
+      }
+
+      /* ==========================================================================
+         Scroll Reveal System
+         ========================================================================== */
+
+      function initScrollReveal() {
+        const revealElements = document.querySelectorAll('.scroll-reveal');
+
+        const observer = new IntersectionObserver((entries, obs) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('revealed');
+              // Stop observing once animated in
+              obs.unobserve(entry.target);
+            }
+          });
+        }, {
+          threshold: 0.1,
+          rootMargin: '0px 0px -50px 0px'
+        });
+
+        revealElements.forEach(el => observer.observe(el));
+      }
+
+      /* ==========================================================================
+         Bootstrap Application
+         ========================================================================== */
+
+      document.addEventListener('DOMContentLoaded', () => {
+        initDemo();
+        initCodeTabs();
+        initClipboardCopy();
+        animateTerminal();
+        initScrollReveal();
+      });
+    </script>
   </body>
 </html>

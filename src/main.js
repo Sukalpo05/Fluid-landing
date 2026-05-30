@@ -2,24 +2,27 @@
 import './style.css';
 
 /* ==========================================================================
-   Dataset: Interactive Compiler Presets
+   Dataset: Interactive Compiler Presets (Aligned with ARCHITECTURE.md)
    ========================================================================== */
 
 const PRESETS = {
   checkout: {
-    fileName: "payment_gateway.json",
+    fileName: "payment_gateway.ts",
     schema: {
-      "$schema": "https://fluid.dev/schemas/v1/capability.json",
       "id": "payment_gateway",
       "version": "1.2.0",
-      "actions": {
+      "entities": {
+        "Transaction": {
+          "amount": { "type": "float", "required": true },
+          "currency": { "type": "string", "required": true },
+          "payment_method": { "type": "select", "options": ["card", "paypal", "wire"], "required": true },
+          "billing_zip": { "type": "string", "required": false }
+        }
+      },
+      "endpoints": {
         "process_payment": {
-          "inputs": {
-            "amount": "float",
-            "currency": "string",
-            "payment_method": "select",
-            "billing_zip": "string"
-          }
+          "path": "/api/payments",
+          "method": "POST"
         }
       }
     },
@@ -29,6 +32,9 @@ const PRESETS = {
         emoji: "💻",
         description: "Desktop browser, US user, high-speed connection. Requesting advanced payment options with full billing layout.",
         device: "desktop",
+        intentText: "standard credit checkout for web users in US region",
+        usage: { "thinking_tokens": 820, "input_tokens": 1420, "output_tokens": 480 },
+        latencyMs: 8200,
         ir: {
           "$schema": "https://fluid.dev/ir/v1.json",
           "id": "payment_gateway",
@@ -52,6 +58,9 @@ const PRESETS = {
         emoji: "📱",
         description: "Mobile device, Tokyo location, transit network. Requesting instant local payment methods, avoiding text fields.",
         device: "mobile",
+        intentText: "mobile one-click checkout in yen on commuter network",
+        usage: { "thinking_tokens": 640, "input_tokens": 1420, "output_tokens": 310 },
+        latencyMs: 5800,
         ir: {
           "$schema": "https://fluid.dev/ir/v1.json",
           "id": "payment_gateway",
@@ -70,6 +79,9 @@ const PRESETS = {
         emoji: "🚨",
         description: "Edge networks degraded. Requesting emergency fallback checkout capability using offline-first deferred credit authorizations.",
         device: "desktop",
+        intentText: "degraded service mode with billing queue deferred actions",
+        usage: { "thinking_tokens": 980, "input_tokens": 1580, "output_tokens": 360 },
+        latencyMs: 9100,
         ir: {
           "$schema": "https://fluid.dev/ir/v1.json",
           "id": "payment_gateway",
@@ -84,18 +96,22 @@ const PRESETS = {
     }
   },
   dashboard: {
-    fileName: "metrics_collector.json",
+    fileName: "metrics_collector.ts",
     schema: {
-      "$schema": "https://fluid.dev/schemas/v1/capability.json",
       "id": "metrics_collector",
       "version": "2.4.1",
-      "actions": {
+      "entities": {
+        "Telemetry": {
+          "resolution": { "type": "string", "required": true },
+          "host_id": { "type": "string", "required": true },
+          "metric_type": { "type": "string", "required": true },
+          "timestamp": { "type": "datetime", "required": true }
+        }
+      },
+      "endpoints": {
         "fetch_telemetry": {
-          "inputs": {
-            "resolution": "string",
-            "host_id": "string",
-            "metric_type": "string"
-          }
+          "path": "/api/telemetry/query",
+          "method": "POST"
         }
       }
     },
@@ -105,6 +121,9 @@ const PRESETS = {
         emoji: "💻",
         description: "Desktop browser, SRE developer. Requests dense telemetry view with granular latency histograms and action items.",
         device: "desktop",
+        intentText: "dense telemetry metrics list with edge latency spikes",
+        usage: { "thinking_tokens": 1050, "input_tokens": 1390, "output_tokens": 580 },
+        latencyMs: 7600,
         ir: {
           "$schema": "https://fluid.dev/ir/v1.json",
           "id": "metrics_collector",
@@ -127,6 +146,9 @@ const PRESETS = {
         emoji: "📱",
         description: "Mobile viewport. Requests a simple, read-only status metric to quickly verify infrastructure health on-the-go.",
         device: "mobile",
+        intentText: "radial summary metric gauge of cluster health mobile view",
+        usage: { "thinking_tokens": 550, "input_tokens": 1390, "output_tokens": 280 },
+        latencyMs: 4900,
         ir: {
           "$schema": "https://fluid.dev/ir/v1.json",
           "id": "metrics_collector",
@@ -144,6 +166,9 @@ const PRESETS = {
         emoji: "🚨",
         description: "High load/incident detected. Renders alert panel highlighting latency spike anomalies and primary emergency actions.",
         device: "desktop",
+        intentText: "critical latency incident alert and traffic reroute actions",
+        usage: { "thinking_tokens": 1120, "input_tokens": 1540, "output_tokens": 420 },
+        latencyMs: 8400,
         ir: {
           "$schema": "https://fluid.dev/ir/v1.json",
           "id": "metrics_collector",
@@ -158,17 +183,21 @@ const PRESETS = {
     }
   },
   feedback: {
-    fileName: "user_engagement.json",
+    fileName: "user_engagement.ts",
     schema: {
-      "$schema": "https://fluid.dev/schemas/v1/capability.json",
       "id": "user_engagement",
       "version": "1.0.2",
-      "actions": {
+      "entities": {
+        "Response": {
+          "rating": { "type": "integer", "required": true },
+          "comment": { "type": "string", "required": true },
+          "incident_code": { "type": "string", "required": false }
+        }
+      },
+      "endpoints": {
         "submit_feedback": {
-          "inputs": {
-            "rating": "int",
-            "comment": "string"
-          }
+          "path": "/api/engagement/feedback",
+          "method": "POST"
         }
       }
     },
@@ -178,6 +207,9 @@ const PRESETS = {
         emoji: "💻",
         description: "Desktop browser, satisfied experience indicators. Renders star selection widget and input comment fields.",
         device: "desktop",
+        intentText: "classic desktop developer rating form with stars selector",
+        usage: { "thinking_tokens": 760, "input_tokens": 1410, "output_tokens": 430 },
+        latencyMs: 6900,
         ir: {
           "$schema": "https://fluid.dev/ir/v1.json",
           "id": "user_engagement",
@@ -195,6 +227,9 @@ const PRESETS = {
         emoji: "📱",
         description: "Mobile viewport, satisfied developer context. Displays a quick single-tap emoji reaction selector to maximize click rates.",
         device: "mobile",
+        intentText: "mobile friendly fast reaction emoji grid select metrics",
+        usage: { "thinking_tokens": 480, "input_tokens": 1410, "output_tokens": 290 },
+        latencyMs: 4100,
         ir: {
           "$schema": "https://fluid.dev/ir/v1.json",
           "id": "user_engagement",
@@ -211,6 +246,9 @@ const PRESETS = {
         emoji: "🚨",
         description: "Incident scenario. Replaces standard product feedback with a critical incident support ticket submission layout.",
         device: "desktop",
+        intentText: "incident reports collection form SLA alert on desktop",
+        usage: { "thinking_tokens": 990, "input_tokens": 1560, "output_tokens": 390 },
+        latencyMs: 7800,
         ir: {
           "$schema": "https://fluid.dev/ir/v1.json",
           "id": "user_engagement",
@@ -234,6 +272,9 @@ let activePresetKey = 'checkout';
 let activeIntentKey = 'standard';
 let compileTimer = null;
 
+// Simulated Memory Cache representing Redis/Local Map cache (1h TTL)
+const applicationCache = new Map();
+
 // DOM Elements
 const schemaPresetSelect = document.getElementById('schema-preset');
 const schemaCodeDisplay = document.getElementById('schema-code-display');
@@ -242,6 +283,7 @@ const irCodeDisplay = document.getElementById('compiled-ir-display');
 const previewViewport = document.getElementById('preview-viewport');
 const intentButtons = document.querySelectorAll('.intent-btn');
 const meterBar = document.querySelector('.meter-bar');
+const latencyBadge = document.getElementById('latency-badge');
 
 const logStep1 = document.getElementById('log-step-1');
 const logStep2 = document.getElementById('log-step-2');
@@ -249,25 +291,36 @@ const logStep3 = document.getElementById('log-step-3');
 const logStep4 = document.getElementById('log-step-4');
 
 /**
+ * Simple Hash simulator to yield reproducible 16-char hashes matching:
+ * ir:{schema}:{sha256(intent)[:16]}
+ */
+function simulateHash(schemaId, intentText) {
+  let hash = 0;
+  const merged = `${schemaId}:${intentText.trim().toLowerCase()}`;
+  for (let i = 0; i < merged.length; i++) {
+    const char = merged.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash & hash;
+  }
+  return `ir:${schemaId}:${Math.abs(hash).toString(16).padEnd(16, '0').slice(0, 16)}`;
+}
+
+/**
  * Initialize Demo Workspace
  */
 function initDemo() {
-  // Preset Select Listener
   schemaPresetSelect.addEventListener('change', (e) => {
     activePresetKey = e.target.value;
-    // Set standard intent as default for new preset
     activeIntentKey = 'standard';
     updateIntentButtonsMarkup();
     triggerCompilation();
   });
 
-  // Intent Button Click Listener
   intentButtons.forEach((btn, idx) => {
     btn.addEventListener('click', () => {
       const intentKeys = ['standard', 'mobile', 'outage'];
       activeIntentKey = intentKeys[idx];
       
-      // Update active state in buttons UI
       intentButtons.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
 
@@ -275,7 +328,6 @@ function initDemo() {
     });
   });
 
-  // Run initial compile
   updateIntentButtonsMarkup();
   triggerCompilation();
 }
@@ -296,7 +348,6 @@ function updateIntentButtonsMarkup() {
     if (iconSpan) iconSpan.textContent = data.emoji;
     if (nameSpan) nameSpan.textContent = data.name;
 
-    // Reset active button state
     if (key === activeIntentKey) {
       btn.classList.add('active');
     } else {
@@ -311,12 +362,15 @@ function updateIntentButtonsMarkup() {
 function triggerCompilation() {
   const preset = PRESETS[activePresetKey];
   const intentData = preset.intents[activeIntentKey];
+  
+  // 1. Calculate Cache Key
+  const cacheKey = simulateHash(preset.schema.id, intentData.intentText);
+  const cacheHit = applicationCache.has(cacheKey);
 
   // Update Left Panel: Schema Code & Description
   schemaCodeDisplay.textContent = JSON.stringify(preset.schema, null, 2);
   intentDescElement.textContent = intentData.description;
 
-  // Clear previous timers & reset compiler UI
   if (compileTimer) clearTimeout(compileTimer);
   meterBar.style.width = '0%';
   
@@ -330,10 +384,20 @@ function triggerCompilation() {
     }
   });
 
+  // Calculate speeds based on Cache HIT status
+  const runDuration = cacheHit ? 180 : 1200; // Hit resolves in 180ms, Miss in 1200ms
+  const stepDelay = cacheHit ? 40 : 250;
+
   // Animate Compiler panel steps sequentially
   let currentStepIndex = 0;
-  meterBar.style.transition = 'width 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+  meterBar.style.transition = `width ${runDuration}ms cubic-bezier(0.25, 0.46, 0.45, 0.94)`;
   meterBar.style.width = '100%';
+
+  // Update Compiler Log Labels dynamically to match Cache Key Hashing
+  logStep1.querySelector('.log-text').textContent = `Hash Intent: ${cacheKey}`;
+  logStep2.querySelector('.log-text').textContent = `Query IR Cache: ${cacheHit ? 'CACHE HIT' : 'CACHE MISS'}`;
+  logStep3.querySelector('.log-text').textContent = cacheHit ? `Loading cached IR tree` : `Calling Claude stream (ephemeral prompt)`;
+  logStep4.querySelector('.log-text').textContent = cacheHit ? `Bypassing Zod check` : `Validating JSON with Zod schema`;
 
   function runStep() {
     if (currentStepIndex < steps.length) {
@@ -341,27 +405,47 @@ function triggerCompilation() {
       step.classList.add('active');
       const statusSpan = step.querySelector('.log-status');
       if (statusSpan) {
-        statusSpan.textContent = 'DONE';
-        statusSpan.style.color = 'var(--accent-green)';
+        if (currentStepIndex === 1) {
+          statusSpan.textContent = cacheHit ? 'HIT' : 'MISS';
+          statusSpan.style.color = cacheHit ? 'var(--accent-cyan)' : 'var(--accent-pink)';
+        } else {
+          statusSpan.textContent = 'DONE';
+          statusSpan.style.color = 'var(--accent-green)';
+        }
       }
       currentStepIndex++;
-      compileTimer = setTimeout(runStep, 250);
+      compileTimer = setTimeout(runStep, stepDelay);
     } else {
-      // Compilation finished -> Render outputs
-      renderOutput(intentData);
+      // Set to cache for subsequent clicks
+      if (!cacheHit) {
+        applicationCache.set(cacheKey, intentData.ir);
+      }
+      renderOutput(intentData, cacheHit);
     }
   }
 
-  // Start animation loop
   runStep();
 }
 
 /**
  * Render IR Code and Live UI Preview Component
  */
-function renderOutput(intentData) {
+function renderOutput(intentData, cacheHit) {
   // Update IR Display code
   irCodeDisplay.textContent = JSON.stringify(intentData.ir, null, 2);
+
+  // Update Latency Badge metadata
+  if (cacheHit) {
+    latencyBadge.textContent = 'CACHE HIT — 1.4ms';
+    latencyBadge.style.color = 'var(--accent-cyan)';
+    latencyBadge.style.borderColor = 'rgba(0, 223, 216, 0.3)';
+    latencyBadge.style.background = 'rgba(0, 223, 216, 0.08)';
+  } else {
+    latencyBadge.textContent = `RESOLVED — ${(intentData.latencyMs / 1000).toFixed(1)}s (Opus Stream)`;
+    latencyBadge.style.color = 'var(--accent-green)';
+    latencyBadge.style.borderColor = 'rgba(0, 255, 135, 0.3)';
+    latencyBadge.style.background = 'rgba(0, 255, 135, 0.08)';
+  }
 
   // Resize right panel viewport based on intent device
   if (intentData.device === 'mobile') {
@@ -375,9 +459,30 @@ function renderOutput(intentData) {
   const container = document.createElement('div');
   container.className = 'mock-container';
 
-  intentData.ir.components.forEach(comp => {
-    const el = document.createElement('div');
+  // Render Token Usage statistics if Miss path
+  if (!cacheHit) {
+    const stats = document.createElement('div');
+    stats.style.fontFamily = 'var(--font-mono)';
+    stats.style.fontSize = '0.65rem';
+    stats.style.color = 'var(--fg-muted)';
+    stats.style.borderBottom = '1px solid var(--border-muted)';
+    stats.style.paddingBottom = '8px';
+    stats.style.marginBottom = '8px';
+    stats.textContent = `Tokens — In: ${intentData.usage.input_tokens} | Thinking: ${intentData.usage.thinking_tokens} | Out: ${intentData.usage.output_tokens}`;
+    container.appendChild(stats);
+  } else {
+    const cacheNotice = document.createElement('div');
+    cacheNotice.style.fontFamily = 'var(--font-mono)';
+    cacheNotice.style.fontSize = '0.65rem';
+    cacheNotice.style.color = 'var(--accent-cyan)';
+    cacheNotice.style.borderBottom = '1px solid var(--border-muted)';
+    cacheNotice.style.paddingBottom = '8px';
+    cacheNotice.style.marginBottom = '8px';
+    cacheNotice.textContent = `Bypassed Claude generation: Loaded from Map application cache.`;
+    container.appendChild(cacheNotice);
+  }
 
+  intentData.ir.components.forEach(comp => {
     switch (comp.type) {
       case 'heading':
         const title = document.createElement('h4');
@@ -536,7 +641,6 @@ function renderOutput(intentData) {
           bar.style.height = '0%';
           barsCont.appendChild(bar);
           
-          // Animate height entrance
           setTimeout(() => {
             bar.style.height = `${val}%`;
           }, 100);
@@ -718,8 +822,6 @@ function animateTerminal() {
   const terminal = document.getElementById('dx-terminal');
   if (!terminal) return;
 
-  // We can re-trigger or play typing sequences here if desired
-  // Currently, the static lines look very clean. Let's make it blink the cursor!
   const cursorNode = terminal.querySelector('.term-cmd:last-of-type');
 }
 
