@@ -1203,6 +1203,7 @@
         border-radius: 12px;
         display: flex;
         flex-direction: column;
+        min-width: 0;
         box-shadow: var(--shadow-premium);
         transition: border-color 0.3s ease;
       }
@@ -1253,6 +1254,7 @@
       .problem-code-visual pre {
         margin: 0;
         overflow: auto;
+        max-width: 100%;
       }
 
       .problem-code-visual code {
@@ -1260,6 +1262,9 @@
         font-size: 0.75rem;
         line-height: 1.4;
         color: #d1d1d1;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        word-break: break-word;
       }
 
       /* --- 4. How It Works Section --- */
@@ -1901,6 +1906,12 @@
         .problem-grid {
           grid-template-columns: 1fr;
         }
+        .problem-card {
+          padding: 28px;
+        }
+        .problem-code-visual {
+          padding: 16px;
+        }
         .how-grid {
           grid-template-columns: 1fr;
           gap: 32px;
@@ -1928,17 +1939,143 @@
       }
 
       @media (max-width: 768px) {
+        .glow-bg {
+          display: none;
+        }
         .nav-links {
+          display: none;
+        }
+        .nav-actions {
           display: none;
         }
         .header-container {
           justify-content: space-between;
+        }
+        .hero-actions,
+        .cta-actions,
+        .mobile-nav-actions {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .hero-actions .btn,
+        .cta-actions .btn,
+        .mobile-nav-actions .btn {
+          width: 100%;
+        }
+        .mock-payment-row {
+          flex-direction: column;
+        }
+        .code-window-header,
+        .terminal-header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 12px;
+        }
+        .cli-command-box {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 12px;
+        }
+        .latency-line {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 8px;
+        }
+        .l-label {
+          width: auto;
+        }
+        .sdk-icons {
+          flex-wrap: wrap;
         }
         .footer-bottom-container {
           flex-direction: column;
           gap: 16px;
           text-align: center;
         }
+      }
+
+      /* Mobile menu toggle and small-screen tweaks */
+      .mobile-menu-toggle {
+        display: none;
+        background: transparent;
+        border: none;
+        color: var(--fg-secondary);
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 6px;
+      }
+
+      .mobile-nav {
+        display: none;
+        position: fixed;
+        inset: 64px 0 0 0;
+        background: rgba(0,0,0,0.92);
+        z-index: 200;
+        align-items: flex-start;
+        justify-content: flex-start;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .mobile-nav-inner {
+        width: 100%;
+        max-width: 420px;
+        padding: 24px;
+        display:flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .mobile-nav-link {
+        color: #ffffff;
+        text-decoration: none;
+        font-size: 1.1rem;
+        padding: 12px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.03);
+      }
+
+      .mobile-nav-actions { display:flex; gap:12px; margin-top:12px; flex-direction:column; }
+
+      .mobile-nav-close {
+        align-self:flex-end;
+        background:transparent;
+        border:none;
+        color:var(--fg-secondary);
+        font-size:1.2rem;
+        padding:6px;
+        cursor:pointer;
+      }
+
+      @media (max-width: 768px) {
+        .mobile-menu-toggle { display: block; }
+        .mobile-nav[aria-hidden="false"], .mobile-nav.open { display: flex; }
+        body.mobile-nav-open { overflow: hidden; }
+        .header { height: 56px; }
+        .hero-section { padding-top: 110px; padding-bottom: 40px; }
+        .section { padding: 60px 0; }
+        .section-container { padding: 0 16px; }
+        .architecture-wrapper { max-width: 360px; margin: 0 auto; }
+        .device-screen { min-height: 320px; }
+      }
+
+      @media (max-width: 480px) {
+        .hero-title { font-size: clamp(1.8rem, 7vw, 2.8rem); }
+        .hero-subtitle { font-size: 1rem; max-width: 100%; }
+        .problem-card {
+          padding: 20px;
+        }
+        .problem-code-visual {
+          padding: 14px;
+        }
+        .code-window-body,
+        .terminal-body {
+          padding: 16px;
+        }
+        .cta-card { padding: 36px 20px; }
+        .section { padding: 40px 0; }
+        .hero-section { padding-top: 90px; min-height: auto; }
+        .mobile-nav-inner { max-width: 100%; padding: 20px; }
+        .mobile-nav-link { font-size: 1rem; padding: 10px 0; }
       }
     </style>
   </head>
@@ -1976,8 +2113,26 @@
           <a href="#docs" class="btn btn-text">Docs</a>
           <a href="#demo" class="btn btn-primary-nav">Start Building</a>
         </div>
+        <button class="mobile-menu-toggle" aria-label="Toggle menu" aria-expanded="false">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
       </div>
     </header>
+
+    <!-- Mobile Nav Overlay -->
+    <nav class="mobile-nav" aria-hidden="true">
+      <div class="mobile-nav-inner">
+        <button class="mobile-nav-close" aria-label="Close menu">✕</button>
+        <a href="#how-it-works" class="mobile-nav-link">How It Works</a>
+        <a href="#demo" class="mobile-nav-link">Interactive Demo</a>
+        <a href="#code-example" class="mobile-nav-link">Code</a>
+        <a href="#features" class="mobile-nav-link">Features</a>
+        <div class="mobile-nav-actions">
+          <a href="#docs" class="btn btn-text">Docs</a>
+          <a href="#demo" class="btn btn-primary-nav">Start Building</a>
+        </div>
+      </div>
+    </nav>
 
     <main class="main-content">
       <!-- 1. Hero Section -->
@@ -2116,7 +2271,7 @@
                   </button>
                   <button class="intent-btn" data-intent="mobile">
                     <span class="intent-icon">📱</span>
-                    <span class="intent-name">Intent B: Tokyo Mobile</span>
+                    <span class="intent-name">Intent B: Mobile Quick Pay</span>
                   </button>
                   <button class="intent-btn" data-intent="outage">
                     <span class="intent-icon">🚨</span>
@@ -2639,7 +2794,7 @@ if (user.isMobile && user.geo === 'JP') {
               }
             },
             mobile: {
-              name: "Intent B: Tokyo Mobile",
+              name: "Intent B: Mobile Quick Pay",
               emoji: "📱",
               description: "Mobile device, Tokyo location, transit network. Requesting instant local payment methods, avoiding text fields.",
               device: "mobile",
@@ -2651,11 +2806,11 @@ if (user.isMobile && user.geo === 'JP') {
                 "id": "payment_gateway",
                 "layout": { "style": "compact", "width": "mobile" },
                 "components": [
-                  { "type": "heading", "content": "クイック決済" },
+                  { "type": "heading", "content": "Quick Checkout" },
                   { "type": "express_button", "provider": "Apple Pay" },
                   { "type": "express_button", "provider": "LINE Pay" },
-                  { "type": "divider", "text": "または通常決済" },
-                  { "type": "button", "label": "¥5,400 支払う", "variant": "primary" }
+                  { "type": "divider", "text": "Or standard checkout" },
+                  { "type": "button", "label": "Pay ¥5,400", "variant": "primary" }
                 ]
               }
             },
@@ -2727,7 +2882,7 @@ if (user.isMobile && user.geo === 'JP') {
               }
             },
             mobile: {
-              name: "Intent B: Tokyo Mobile",
+              name: "Intent B: Mobile Quick Pay",
               emoji: "📱",
               description: "Mobile viewport. Requests a simple, read-only status metric to quickly verify infrastructure health on-the-go.",
               device: "mobile",
@@ -2808,7 +2963,7 @@ if (user.isMobile && user.geo === 'JP') {
               }
             },
             mobile: {
-              name: "Intent B: Tokyo Mobile",
+              name: "Intent B: Mobile Quick Pay",
               emoji: "📱",
               description: "Mobile viewport, satisfied developer context. Displays a quick single-tap emoji reaction selector to maximize click rates.",
               device: "mobile",
@@ -3162,7 +3317,7 @@ if (user.isMobile && user.geo === 'JP') {
               const btnLogo = document.createElement('span');
               btnLogo.textContent = comp.provider === 'Apple Pay' ? '🍎' : '💬';
               const btnText = document.createElement('span');
-              btnText.textContent = `${comp.provider}で支払う`;
+              btnText.textContent = `Pay with ${comp.provider}`;
               btnText.style.fontSize = '0.75rem';
               btnText.style.fontWeight = 'bold';
               
@@ -3545,6 +3700,36 @@ if (user.isMobile && user.geo === 'JP') {
          Bootstrap Application
          ========================================================================== */
 
+      /* Mobile navigation init */
+      function initMobileNav() {
+        const mobileToggle = document.querySelector('.mobile-menu-toggle');
+        const mobileNav = document.querySelector('.mobile-nav');
+        const mobileNavClose = document.querySelector('.mobile-nav-close');
+        if (!mobileToggle || !mobileNav) return;
+
+        function closeNav() {
+          mobileNav.classList.remove('open');
+          mobileNav.setAttribute('aria-hidden', 'true');
+          mobileToggle.setAttribute('aria-expanded', 'false');
+          document.body.classList.remove('mobile-nav-open');
+        }
+
+        mobileToggle.addEventListener('click', () => {
+          const isOpen = mobileNav.classList.toggle('open');
+          mobileNav.setAttribute('aria-hidden', (!isOpen).toString());
+          mobileToggle.setAttribute('aria-expanded', isOpen.toString());
+          document.body.classList.toggle('mobile-nav-open', isOpen);
+        });
+
+        if (mobileNavClose) mobileNavClose.addEventListener('click', closeNav);
+
+        mobileNav.addEventListener('click', (e) => {
+          if (e.target === mobileNav) closeNav();
+        });
+
+        mobileNav.querySelectorAll('.mobile-nav-link').forEach(a => a.addEventListener('click', closeNav));
+      }
+
       document.addEventListener('DOMContentLoaded', () => {
         initDemo();
         initCodeTabs();
@@ -3552,6 +3737,7 @@ if (user.isMobile && user.geo === 'JP') {
         animateTerminal();
         initScrollReveal();
         initBackgroundAnimation();
+        initMobileNav();
       });
     </script>
   </body>

@@ -964,6 +964,7 @@
         border-radius: 12px;
         display: flex;
         flex-direction: column;
+        min-width: 0;
         box-shadow: var(--shadow-premium);
         transition: border-color 0.3s ease;
       }
@@ -1014,6 +1015,7 @@
       .problem-code-visual pre {
         margin: 0;
         overflow: auto;
+        max-width: 100%;
       }
 
       .problem-code-visual code {
@@ -1021,6 +1023,9 @@
         font-size: 0.75rem;
         line-height: 1.4;
         color: #d1d1d1;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        word-break: break-word;
       }
 
       /* --- 4. How It Works Section --- */
@@ -1662,6 +1667,12 @@
         .problem-grid {
           grid-template-columns: 1fr;
         }
+        .problem-card {
+          padding: 28px;
+        }
+        .problem-code-visual {
+          padding: 16px;
+        }
         .how-grid {
           grid-template-columns: 1fr;
           gap: 32px;
@@ -1689,17 +1700,75 @@
       }
 
       @media (max-width: 768px) {
+        .glow-bg {
+          display: none;
+        }
         .nav-links {
+          display: none;
+        }
+        .nav-actions {
           display: none;
         }
         .header-container {
           justify-content: space-between;
+        }
+        .hero-actions,
+        .cta-actions {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .hero-actions .btn,
+        .cta-actions .btn {
+          width: 100%;
+        }
+        .mock-payment-row {
+          flex-direction: column;
+        }
+        .code-window-header,
+        .terminal-header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 12px;
+        }
+        .cli-command-box {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 12px;
+        }
+        .latency-line {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 8px;
+        }
+        .l-label {
+          width: auto;
+        }
+        .sdk-icons {
+          flex-wrap: wrap;
         }
         .footer-bottom-container {
           flex-direction: column;
           gap: 16px;
           text-align: center;
         }
+      }
+
+      @media (max-width: 480px) {
+        .hero-title { font-size: clamp(1.8rem, 7vw, 2.8rem); }
+        .hero-subtitle { font-size: 1rem; max-width: 100%; }
+        .problem-card {
+          padding: 20px;
+        }
+        .problem-code-visual {
+          padding: 14px;
+        }
+        .code-window-body,
+        .terminal-body {
+          padding: 16px;
+        }
+        .cta-card { padding: 36px 20px; }
+        .section { padding: 40px 0; }
+        .hero-section { padding-top: 90px; min-height: auto; }
       }
     </style>
   </head>
@@ -1876,7 +1945,7 @@
                   </button>
                   <button class="intent-btn" data-intent="mobile">
                     <span class="intent-icon">📱</span>
-                    <span class="intent-name">Intent B: Tokyo Mobile</span>
+                    <span class="intent-name">Intent B: Mobile Quick Pay</span>
                   </button>
                   <button class="intent-btn" data-intent="outage">
                     <span class="intent-icon">🚨</span>
@@ -2399,7 +2468,7 @@ if (user.isMobile && user.geo === 'JP') {
               }
             },
             mobile: {
-              name: "Intent B: Tokyo Mobile",
+              name: "Intent B: Mobile Quick Pay",
               emoji: "📱",
               description: "Mobile device, Tokyo location, transit network. Requesting instant local payment methods, avoiding text fields.",
               device: "mobile",
@@ -2411,11 +2480,11 @@ if (user.isMobile && user.geo === 'JP') {
                 "id": "payment_gateway",
                 "layout": { "style": "compact", "width": "mobile" },
                 "components": [
-                  { "type": "heading", "content": "クイック決済" },
+                  { "type": "heading", "content": "Quick Checkout" },
                   { "type": "express_button", "provider": "Apple Pay" },
                   { "type": "express_button", "provider": "LINE Pay" },
-                  { "type": "divider", "text": "または通常決済" },
-                  { "type": "button", "label": "¥5,400 支払う", "variant": "primary" }
+                  { "type": "divider", "text": "Or standard checkout" },
+                  { "type": "button", "label": "Pay ¥5,400", "variant": "primary" }
                 ]
               }
             },
@@ -2487,7 +2556,7 @@ if (user.isMobile && user.geo === 'JP') {
               }
             },
             mobile: {
-              name: "Intent B: Tokyo Mobile",
+              name: "Intent B: Mobile Quick Pay",
               emoji: "📱",
               description: "Mobile viewport. Requests a simple, read-only status metric to quickly verify infrastructure health on-the-go.",
               device: "mobile",
@@ -2568,7 +2637,7 @@ if (user.isMobile && user.geo === 'JP') {
               }
             },
             mobile: {
-              name: "Intent B: Tokyo Mobile",
+              name: "Intent B: Mobile Quick Pay",
               emoji: "📱",
               description: "Mobile viewport, satisfied developer context. Displays a quick single-tap emoji reaction selector to maximize click rates.",
               device: "mobile",
@@ -2922,7 +2991,7 @@ if (user.isMobile && user.geo === 'JP') {
               const btnLogo = document.createElement('span');
               btnLogo.textContent = comp.provider === 'Apple Pay' ? '🍎' : '💬';
               const btnText = document.createElement('span');
-              btnText.textContent = `${comp.provider}で支払う`;
+              btnText.textContent = `Pay with ${comp.provider}`;
               btnText.style.fontSize = '0.75rem';
               btnText.style.fontWeight = 'bold';
               

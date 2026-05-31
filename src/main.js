@@ -54,7 +54,7 @@ const PRESETS = {
         }
       },
       mobile: {
-        name: "Intent B: Tokyo Mobile",
+        name: "Intent B: Mobile Quick Pay",
         emoji: "📱",
         description: "Mobile device, Tokyo location, transit network. Requesting instant local payment methods, avoiding text fields.",
         device: "mobile",
@@ -66,11 +66,11 @@ const PRESETS = {
           "id": "payment_gateway",
           "layout": { "style": "compact", "width": "mobile" },
           "components": [
-            { "type": "heading", "content": "クイック決済" },
+            { "type": "heading", "content": "Quick Checkout" },
             { "type": "express_button", "provider": "Apple Pay" },
             { "type": "express_button", "provider": "LINE Pay" },
-            { "type": "divider", "text": "または通常決済" },
-            { "type": "button", "label": "¥5,400 支払う", "variant": "primary" }
+            { "type": "divider", "text": "Or standard checkout" },
+            { "type": "button", "label": "Pay ¥5,400", "variant": "primary" }
           ]
         }
       },
@@ -142,7 +142,7 @@ const PRESETS = {
         }
       },
       mobile: {
-        name: "Intent B: Tokyo Mobile",
+        name: "Intent B: Mobile Quick Pay",
         emoji: "📱",
         description: "Mobile viewport. Requests a simple, read-only status metric to quickly verify infrastructure health on-the-go.",
         device: "mobile",
@@ -223,7 +223,7 @@ const PRESETS = {
         }
       },
       mobile: {
-        name: "Intent B: Tokyo Mobile",
+        name: "Intent B: Mobile Quick Pay",
         emoji: "📱",
         description: "Mobile viewport, satisfied developer context. Displays a quick single-tap emoji reaction selector to maximize click rates.",
         device: "mobile",
@@ -577,7 +577,7 @@ function renderOutput(intentData, cacheHit) {
         const btnLogo = document.createElement('span');
         btnLogo.textContent = comp.provider === 'Apple Pay' ? '🍎' : '💬';
         const btnText = document.createElement('span');
-        btnText.textContent = `${comp.provider}で支払う`;
+        btnText.textContent = `Pay with ${comp.provider}`;
         btnText.style.fontSize = '0.75rem';
         btnText.style.fontWeight = 'bold';
         
