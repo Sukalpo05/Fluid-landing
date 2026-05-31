@@ -1,0 +1,1342 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Fluid Documentation — Step-by-step integration guide for adding AI-generated, schema-driven UIs to any Next.js project." />
+    <title>Fluid Docs — Integration Guide</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+      /* ==========================================================================
+         Fluid Docs — Design System (mirrors landing page)
+         ========================================================================== */
+
+      :root {
+        --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        --font-heading: 'Outfit', var(--font-sans);
+
+        --bg-absolute: #000000;
+        --bg-primary: #030303;
+        --bg-secondary: #0a0a0c;
+        --bg-tertiary: #121215;
+        --fg-primary: #ededed;
+        --fg-secondary: #a3a3a3;
+        --fg-muted: #666666;
+        --fg-dark: #333333;
+
+        --accent-blue: #0072f5;
+        --accent-purple: #7928ca;
+        --accent-pink: #ff0080;
+        --accent-cyan: #00dfd8;
+        --accent-green: #00ff87;
+
+        --border-muted: rgba(255, 255, 255, 0.07);
+        --border-active: rgba(255, 255, 255, 0.15);
+        --glass-bg: rgba(10, 10, 12, 0.65);
+        --glass-blur: blur(12px) saturate(190%);
+
+        --sidebar-width: 280px;
+        --header-height: 64px;
+      }
+
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+
+      html {
+        scroll-behavior: smooth;
+        scroll-padding-top: calc(var(--header-height) + 24px);
+        background-color: var(--bg-absolute);
+        color: var(--fg-primary);
+        font-family: var(--font-sans);
+        font-size: 16px;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      body {
+        overflow-x: hidden;
+        background-color: var(--bg-primary);
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+        background-size: 50px 50px;
+      }
+
+      /* --- Scrollbar --- */
+      ::-webkit-scrollbar { width: 5px; height: 5px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 10px; }
+      ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+
+      /* ==========================================================================
+         Header
+         ========================================================================== */
+
+      .header {
+        position: fixed;
+        top: 0; left: 0; right: 0;
+        height: var(--header-height);
+        z-index: 100;
+        background: rgba(0, 0, 0, 0.75);
+        backdrop-filter: blur(16px) saturate(180%);
+        -webkit-backdrop-filter: blur(16px) saturate(180%);
+        border-bottom: 1px solid var(--border-muted);
+      }
+
+      .header-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 24px;
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        color: #ffffff;
+      }
+
+      .logo-text {
+        font-family: var(--font-heading);
+        font-weight: 600;
+        font-size: 1.25rem;
+        letter-spacing: -0.02em;
+      }
+
+      .logo-badge {
+        font-size: 0.65rem;
+        font-weight: 600;
+        color: var(--accent-cyan);
+        background: rgba(0, 223, 216, 0.1);
+        border: 1px solid rgba(0, 223, 216, 0.2);
+        padding: 2px 8px;
+        border-radius: 4px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .header-nav {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+      }
+
+      .header-nav a {
+        color: var(--fg-secondary);
+        text-decoration: none;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: color 0.2s;
+      }
+
+      .header-nav a:hover { color: #fff; }
+
+      .header-nav .btn-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--fg-muted);
+        font-size: 0.8rem;
+        padding: 6px 14px;
+        border: 1px solid var(--border-muted);
+        border-radius: 6px;
+        transition: all 0.2s;
+      }
+
+      .header-nav .btn-back:hover {
+        border-color: var(--border-active);
+        color: var(--fg-primary);
+      }
+
+      /* ==========================================================================
+         Layout: Sidebar + Content
+         ========================================================================== */
+
+      .docs-layout {
+        display: flex;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding-top: var(--header-height);
+        min-height: 100vh;
+      }
+
+      /* --- Sidebar --- */
+      .docs-sidebar {
+        position: sticky;
+        top: var(--header-height);
+        width: var(--sidebar-width);
+        height: calc(100vh - var(--header-height));
+        overflow-y: auto;
+        padding: 32px 20px 60px 24px;
+        border-right: 1px solid var(--border-muted);
+        flex-shrink: 0;
+      }
+
+      .sidebar-section {
+        margin-bottom: 28px;
+      }
+
+      .sidebar-label {
+        font-size: 0.65rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--fg-muted);
+        margin-bottom: 10px;
+        padding-left: 12px;
+      }
+
+      .sidebar-link {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 7px 12px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 0.82rem;
+        font-weight: 450;
+        color: var(--fg-secondary);
+        transition: all 0.15s ease;
+        margin-bottom: 2px;
+      }
+
+      .sidebar-link:hover {
+        color: var(--fg-primary);
+        background: rgba(255,255,255,0.03);
+      }
+
+      .sidebar-link.active {
+        color: #fff;
+        background: rgba(0, 114, 245, 0.08);
+        border-left: 2px solid var(--accent-blue);
+      }
+
+      .sidebar-step {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        border-radius: 5px;
+        font-size: 0.65rem;
+        font-weight: 700;
+        font-family: var(--font-mono);
+        flex-shrink: 0;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid var(--border-muted);
+        color: var(--fg-muted);
+      }
+
+      .sidebar-link.active .sidebar-step {
+        background: rgba(0, 114, 245, 0.15);
+        border-color: rgba(0, 114, 245, 0.3);
+        color: var(--accent-blue);
+      }
+
+      /* --- Main Content --- */
+      .docs-content {
+        flex: 1;
+        padding: 40px 48px 100px;
+        max-width: 860px;
+        min-width: 0;
+      }
+
+      /* ==========================================================================
+         Typography
+         ========================================================================== */
+
+      .docs-content h1 {
+        font-family: var(--font-heading);
+        font-size: 2.25rem;
+        font-weight: 700;
+        letter-spacing: -0.04em;
+        line-height: 1.15;
+        background: linear-gradient(180deg, #ffffff 30%, #b0b0b0 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 12px;
+      }
+
+      .docs-content h2 {
+        font-family: var(--font-heading);
+        font-size: 1.5rem;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        color: #ffffff;
+        margin-top: 56px;
+        margin-bottom: 16px;
+        padding-top: 24px;
+        border-top: 1px solid var(--border-muted);
+      }
+
+      .docs-content h2:first-of-type {
+        margin-top: 0;
+        border-top: none;
+        padding-top: 0;
+      }
+
+      .docs-content h3 {
+        font-family: var(--font-heading);
+        font-size: 1.15rem;
+        font-weight: 600;
+        color: #fff;
+        margin-top: 36px;
+        margin-bottom: 12px;
+      }
+
+      .docs-content p {
+        color: var(--fg-secondary);
+        line-height: 1.7;
+        margin-bottom: 16px;
+      }
+
+      .docs-content a {
+        color: var(--accent-blue);
+        text-decoration: none;
+        border-bottom: 1px solid rgba(0, 114, 245, 0.3);
+        transition: border-color 0.2s;
+      }
+
+      .docs-content a:hover {
+        border-bottom-color: var(--accent-blue);
+      }
+
+      .docs-content ul, .docs-content ol {
+        margin-bottom: 16px;
+        padding-left: 20px;
+        color: var(--fg-secondary);
+      }
+
+      .docs-content li {
+        margin-bottom: 6px;
+        line-height: 1.6;
+      }
+
+      .docs-content strong {
+        color: var(--fg-primary);
+        font-weight: 600;
+      }
+
+      .docs-content hr {
+        border: none;
+        border-top: 1px solid var(--border-muted);
+        margin: 40px 0;
+      }
+
+      /* --- Hero Banner --- */
+      .docs-hero {
+        margin-bottom: 40px;
+        padding-bottom: 32px;
+        border-bottom: 1px solid var(--border-muted);
+      }
+
+      .docs-hero .subtitle {
+        font-size: 1.05rem;
+        color: var(--fg-secondary);
+        max-width: 600px;
+      }
+
+      .docs-hero .meta-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .meta-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.72rem;
+        font-weight: 500;
+        padding: 4px 10px;
+        border-radius: 4px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid var(--border-muted);
+        color: var(--fg-muted);
+        letter-spacing: 0.02em;
+      }
+
+      .meta-tag .dot {
+        width: 5px; height: 5px;
+        border-radius: 50%;
+        background: var(--accent-green);
+        box-shadow: 0 0 6px var(--accent-green);
+      }
+
+      /* ==========================================================================
+         Stage Indicators
+         ========================================================================== */
+
+      .stage-header {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-top: 56px;
+        margin-bottom: 8px;
+        padding-top: 24px;
+        border-top: 1px solid var(--border-muted);
+      }
+
+      .stage-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        font-family: var(--font-mono);
+        flex-shrink: 0;
+      }
+
+      .stage-badge.blue   { background: rgba(0, 114, 245, 0.12); border: 1px solid rgba(0, 114, 245, 0.25); color: var(--accent-blue); }
+      .stage-badge.purple { background: rgba(121, 40, 202, 0.12); border: 1px solid rgba(121, 40, 202, 0.25); color: var(--accent-purple); }
+      .stage-badge.cyan   { background: rgba(0, 223, 216, 0.12); border: 1px solid rgba(0, 223, 216, 0.25); color: var(--accent-cyan); }
+      .stage-badge.green  { background: rgba(0, 255, 135, 0.12); border: 1px solid rgba(0, 255, 135, 0.25); color: var(--accent-green); }
+      .stage-badge.pink   { background: rgba(255, 0, 128, 0.12); border: 1px solid rgba(255, 0, 128, 0.25); color: var(--accent-pink); }
+
+      .stage-title {
+        font-family: var(--font-heading);
+        font-size: 1.5rem;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        color: #ffffff;
+      }
+
+      .stage-desc {
+        color: var(--fg-secondary);
+        margin-bottom: 20px;
+        line-height: 1.7;
+      }
+
+      /* ==========================================================================
+         Code Blocks
+         ========================================================================== */
+
+      .code-window {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-muted);
+        border-radius: 10px;
+        overflow: hidden;
+        margin: 20px 0 24px;
+      }
+
+      .code-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 16px;
+        background: rgba(255,255,255,0.02);
+        border-bottom: 1px solid var(--border-muted);
+      }
+
+      .code-filename {
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        color: var(--fg-muted);
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .code-filename .file-icon {
+        color: var(--accent-blue);
+        font-size: 0.6rem;
+      }
+
+      .code-lang {
+        font-family: var(--font-mono);
+        font-size: 0.62rem;
+        color: var(--fg-dark);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .code-body {
+        padding: 16px 20px;
+        overflow-x: auto;
+      }
+
+      .code-body pre {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        line-height: 1.65;
+        color: #b3c6ff;
+        white-space: pre;
+        tab-size: 2;
+      }
+
+      /* Inline code */
+      .docs-content code {
+        font-family: var(--font-mono);
+        font-size: 0.82em;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid var(--border-muted);
+        padding: 2px 7px;
+        border-radius: 4px;
+        color: #d0bfff;
+      }
+
+      .code-body code, .code-body pre code {
+        background: none;
+        border: none;
+        padding: 0;
+        font-size: inherit;
+        border-radius: 0;
+      }
+
+      /* Syntax highlighting */
+      .c-keyword { color: #c792ea; }
+      .c-string  { color: #c3e88d; }
+      .c-comment { color: #546e7a; font-style: italic; }
+      .c-tag     { color: #ff7b72; }
+      .c-attr    { color: #79c0ff; }
+      .c-func    { color: #82aaff; }
+      .c-type    { color: #ffcb6b; }
+      .c-num     { color: #f78c6c; }
+
+      /* ==========================================================================
+         Callout Boxes
+         ========================================================================== */
+
+      .callout {
+        padding: 16px 20px;
+        border-radius: 8px;
+        margin: 20px 0;
+        border-left: 3px solid;
+        font-size: 0.88rem;
+      }
+
+      .callout p { margin-bottom: 0; }
+
+      .callout-info {
+        background: rgba(0, 114, 245, 0.06);
+        border-color: var(--accent-blue);
+      }
+
+      .callout-info .callout-title { color: var(--accent-blue); }
+
+      .callout-warn {
+        background: rgba(255, 200, 0, 0.05);
+        border-color: #ffc800;
+      }
+
+      .callout-warn .callout-title { color: #ffc800; }
+
+      .callout-tip {
+        background: rgba(0, 255, 135, 0.04);
+        border-color: var(--accent-green);
+      }
+
+      .callout-tip .callout-title { color: var(--accent-green); }
+
+      .callout-title {
+        font-weight: 600;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      /* ==========================================================================
+         Architecture Diagram
+         ========================================================================== */
+
+      .arch-diagram {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-muted);
+        border-radius: 10px;
+        padding: 32px 24px;
+        margin: 24px 0;
+        text-align: center;
+      }
+
+      .arch-flow {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0;
+        flex-wrap: wrap;
+      }
+
+      .arch-node {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        padding: 14px 20px;
+        background: rgba(255,255,255,0.02);
+        border: 1px solid var(--border-muted);
+        border-radius: 8px;
+        min-width: 120px;
+        transition: all 0.25s;
+      }
+
+      .arch-node:hover {
+        border-color: var(--border-active);
+        background: rgba(255,255,255,0.04);
+      }
+
+      .arch-node-label {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--fg-primary);
+      }
+
+      .arch-node-sub {
+        font-size: 0.65rem;
+        color: var(--fg-muted);
+        font-family: var(--font-mono);
+      }
+
+      .arch-arrow {
+        color: var(--fg-dark);
+        font-size: 1.2rem;
+        padding: 0 8px;
+        display: flex;
+        align-items: center;
+      }
+
+      /* ==========================================================================
+         Table
+         ========================================================================== */
+
+      .docs-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0 24px;
+        font-size: 0.85rem;
+      }
+
+      .docs-table th {
+        text-align: left;
+        padding: 10px 14px;
+        font-weight: 600;
+        font-size: 0.72rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--fg-muted);
+        border-bottom: 1px solid var(--border-active);
+        background: rgba(255,255,255,0.02);
+      }
+
+      .docs-table td {
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--border-muted);
+        color: var(--fg-secondary);
+      }
+
+      .docs-table td code {
+        font-size: 0.78em;
+      }
+
+      .docs-table tr:hover td {
+        background: rgba(255,255,255,0.015);
+      }
+
+      /* ==========================================================================
+         Responsive
+         ========================================================================== */
+
+      @media (max-width: 1024px) {
+        .docs-sidebar { display: none; }
+        .docs-content { padding: 32px 24px 80px; max-width: 100%; }
+      }
+
+      @media (max-width: 768px) {
+        .header-nav { gap: 12px; }
+        .docs-content h1 { font-size: 1.75rem; }
+        .arch-flow { flex-direction: column; }
+        .arch-arrow { transform: rotate(90deg); padding: 4px 0; }
+      }
+    </style>
+  </head>
+  <body>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         Header
+         ══════════════════════════════════════════════════════════════ -->
+    <header class="header">
+      <div class="header-container">
+        <a href="index.html" class="logo">
+          <svg class="logo-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="url(#lg)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 17L12 22L22 17" stroke="url(#lg)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 12L12 17L22 12" stroke="url(#lg)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <defs>
+              <linearGradient id="lg" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#00DFD8" />
+                <stop offset="0.5" stop-color="#0072F5" />
+                <stop offset="1" stop-color="#7928CA" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <span class="logo-text">Fluid</span>
+          <span class="logo-badge">Docs</span>
+        </a>
+        <nav class="header-nav">
+          <a href="index.html" class="btn-back">← Back to Home</a>
+          <a href="#stage-1">Quick Start</a>
+          <a href="#stage-4">Chatbot</a>
+          <a href="#api-reference">API</a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         Layout: Sidebar + Content
+         ══════════════════════════════════════════════════════════════ -->
+    <div class="docs-layout">
+
+      <!-- Sidebar -->
+      <aside class="docs-sidebar">
+        <div class="sidebar-section">
+          <div class="sidebar-label">Getting Started</div>
+          <a href="#overview" class="sidebar-link active">
+            <span class="sidebar-step">—</span> Overview
+          </a>
+          <a href="#architecture" class="sidebar-link">
+            <span class="sidebar-step">—</span> Architecture
+          </a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-label">Integration Stages</div>
+          <a href="#stage-1" class="sidebar-link">
+            <span class="sidebar-step">01</span> Install Packages
+          </a>
+          <a href="#stage-2" class="sidebar-link">
+            <span class="sidebar-step">02</span> Define Schema
+          </a>
+          <a href="#stage-3" class="sidebar-link">
+            <span class="sidebar-step">03</span> Configure Engine
+          </a>
+          <a href="#stage-4" class="sidebar-link">
+            <span class="sidebar-step">04</span> API Routes
+          </a>
+          <a href="#stage-5" class="sidebar-link">
+            <span class="sidebar-step">05</span> Render UI
+          </a>
+          <a href="#stage-6" class="sidebar-link">
+            <span class="sidebar-step">06</span> Add Chatbot
+          </a>
+          <a href="#stage-7" class="sidebar-link">
+            <span class="sidebar-step">07</span> Telemetry & Hooks
+          </a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-label">Reference</div>
+          <a href="#api-reference" class="sidebar-link">
+            <span class="sidebar-step">—</span> API Reference
+          </a>
+          <a href="#providers" class="sidebar-link">
+            <span class="sidebar-step">—</span> LLM Providers
+          </a>
+          <a href="#database" class="sidebar-link">
+            <span class="sidebar-step">—</span> Database Setup
+          </a>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="docs-content">
+
+        <!-- ─── Overview ─── -->
+        <div class="docs-hero" id="overview">
+          <h1>Fluid Integration Guide</h1>
+          <p class="subtitle">Add AI-generated, schema-driven UIs to any Next.js project in 7 stages. From <code>npm install</code> to a live chatbot that lets users reshape their interface in real time.</p>
+          <div class="meta-row">
+            <span class="meta-tag"><span class="dot"></span> v1.2.0</span>
+            <span class="meta-tag">Next.js 16+</span>
+            <span class="meta-tag">TypeScript</span>
+            <span class="meta-tag">~15 min setup</span>
+          </div>
+        </div>
+
+        <!-- ─── Architecture ─── -->
+        <h2 id="architecture">How Fluid Works</h2>
+        <p>Fluid operates on a simple principle: <strong>your schema declares what's possible, the LLM decides what to show, and the renderer makes it real</strong>. No per-user component code, no per-user customization files.</p>
+
+        <div class="arch-diagram">
+          <div class="arch-flow">
+            <div class="arch-node">
+              <span class="arch-node-label">.fluid.ts</span>
+              <span class="arch-node-sub">Schema</span>
+            </div>
+            <span class="arch-arrow">→</span>
+            <div class="arch-node" style="border-color: rgba(121, 40, 202, 0.3); background: rgba(121, 40, 202, 0.04);">
+              <span class="arch-node-label">Engine</span>
+              <span class="arch-node-sub">LLM → IR</span>
+            </div>
+            <span class="arch-arrow">→</span>
+            <div class="arch-node">
+              <span class="arch-node-label">IR</span>
+              <span class="arch-node-sub">JSON tree</span>
+            </div>
+            <span class="arch-arrow">→</span>
+            <div class="arch-node" style="border-color: rgba(0, 223, 216, 0.3); background: rgba(0, 223, 216, 0.04);">
+              <span class="arch-node-label">FluidView</span>
+              <span class="arch-node-sub">React SSR</span>
+            </div>
+            <span class="arch-arrow">→</span>
+            <div class="arch-node">
+              <span class="arch-node-label">User</span>
+              <span class="arch-node-sub">Personalized UI</span>
+            </div>
+          </div>
+        </div>
+
+        <p>The <strong>IR (Intermediate Representation)</strong> is the core innovation — sandboxed JSON that can only reference entities and fields you declared. No script injection, no unauthorized API calls, fully Zod-validated.</p>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             STAGE 1: Install
+             ═══════════════════════════════════════════════════════════ -->
+        <div class="stage-header" id="stage-1">
+          <span class="stage-badge blue">01</span>
+          <span class="stage-title">Install Packages</span>
+        </div>
+        <p class="stage-desc">Fluid is distributed as a set of workspace packages. Add the packages you need:</p>
+
+        <div class="code-window">
+          <div class="code-header">
+            <span class="code-filename"><span class="file-icon">$</span> terminal</span>
+            <span class="code-lang">bash</span>
+          </div>
+          <div class="code-body">
+<pre><span class="c-comment"># Core packages (required)</span>
+bun add @fluid/core @fluid/engine @fluid/react
+
+<span class="c-comment"># Database adapters (recommended for production)</span>
+bun add @fluid/db
+
+<span class="c-comment"># Telemetry & context enrichment (optional)</span>
+bun add @fluid/telemetry</pre>
+          </div>
+        </div>
+
+        <table class="docs-table">
+          <thead>
+            <tr><th>Package</th><th>Purpose</th><th>Required?</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>@fluid/core</code></td><td>IR types, schema definition, Zod validation</td><td>Yes</td></tr>
+            <tr><td><code>@fluid/engine</code></td><td>LLM orchestration, caching, rate limiting</td><td>Yes</td></tr>
+            <tr><td><code>@fluid/react</code></td><td>FluidView renderer, FluidChat widget, hooks</td><td>Yes</td></tr>
+            <tr><td><code>@fluid/db</code></td><td>Drizzle ORM + Postgres adapters for all stores</td><td>Prod</td></tr>
+            <tr><td><code>@fluid/telemetry</code></td><td>Context enricher, refresh policy</td><td>No</td></tr>
+          </tbody>
+        </table>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             STAGE 2: Schema
+             ═══════════════════════════════════════════════════════════ -->
+        <div class="stage-header" id="stage-2">
+          <span class="stage-badge purple">02</span>
+          <span class="stage-title">Define Your Schema</span>
+        </div>
+        <p class="stage-desc">Create a <code>.fluid.ts</code> file that declares your data entities, fields, and API endpoints. This is the single source of truth — the LLM can only generate UIs that reference what you declare here.</p>
+
+        <div class="code-window">
+          <div class="code-header">
+            <span class="code-filename"><span class="file-icon">◆</span> src/schemas/crm.fluid.ts</span>
+            <span class="code-lang">TypeScript</span>
+          </div>
+          <div class="code-body">
+<pre><span class="c-keyword">import</span> { defineSchema } <span class="c-keyword">from</span> <span class="c-string">"@fluid/core"</span>;
+
+<span class="c-keyword">export const</span> crmSchema = defineSchema({
+  <span class="c-attr">name</span>: <span class="c-string">"crm"</span>,
+  <span class="c-attr">entities</span>: {
+    Deal: {
+      <span class="c-attr">fields</span>: {
+        name:   { <span class="c-attr">type</span>: <span class="c-string">"string"</span>, <span class="c-attr">label</span>: <span class="c-string">"Deal Name"</span> },
+        value:  { <span class="c-attr">type</span>: <span class="c-string">"number"</span>, <span class="c-attr">label</span>: <span class="c-string">"Value ($)"</span> },
+        stage:  {
+          <span class="c-attr">type</span>: <span class="c-string">"enum"</span>,
+          <span class="c-attr">values</span>: [<span class="c-string">"prospect"</span>, <span class="c-string">"qualified"</span>, <span class="c-string">"proposal"</span>, <span class="c-string">"won"</span>, <span class="c-string">"lost"</span>],
+          <span class="c-attr">label</span>: <span class="c-string">"Stage"</span>,
+        },
+        owner:  { <span class="c-attr">type</span>: <span class="c-string">"string"</span>, <span class="c-attr">label</span>: <span class="c-string">"Owner"</span> },
+      },
+    },
+    Contact: {
+      <span class="c-attr">fields</span>: {
+        name:   { <span class="c-attr">type</span>: <span class="c-string">"string"</span>, <span class="c-attr">label</span>: <span class="c-string">"Name"</span> },
+        email:  { <span class="c-attr">type</span>: <span class="c-string">"string"</span>, <span class="c-attr">label</span>: <span class="c-string">"Email"</span> },
+        role:   { <span class="c-attr">type</span>: <span class="c-string">"string"</span>, <span class="c-attr">label</span>: <span class="c-string">"Role"</span> },
+      },
+    },
+  },
+  <span class="c-attr">endpoints</span>: {
+    deals:    { <span class="c-attr">entity</span>: <span class="c-string">"Deal"</span>,    <span class="c-attr">fetch</span>: () => fetchDeals()    },
+    contacts: { <span class="c-attr">entity</span>: <span class="c-string">"Contact"</span>, <span class="c-attr">fetch</span>: () => fetchContacts() },
+  },
+});</pre>
+          </div>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-title">ℹ Info</div>
+          <p>The schema is your security boundary. The LLM cannot reference any entity, field, or endpoint not declared here. <code>checkIRAgainstSchema()</code> validates this at runtime.</p>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             STAGE 3: Engine
+             ═══════════════════════════════════════════════════════════ -->
+        <div class="stage-header" id="stage-3">
+          <span class="stage-badge cyan">03</span>
+          <span class="stage-title">Configure the Engine</span>
+        </div>
+        <p class="stage-desc">Create a server-only engine singleton. The engine orchestrates LLM calls, caching, profile storage, and rate limiting.</p>
+
+        <div class="code-window">
+          <div class="code-header">
+            <span class="code-filename"><span class="file-icon">◆</span> src/lib/engine.ts</span>
+            <span class="code-lang">TypeScript</span>
+          </div>
+          <div class="code-body">
+<pre><span class="c-keyword">import</span> <span class="c-string">"server-only"</span>;
+<span class="c-keyword">import</span> { createEngine, createGeminiProvider } <span class="c-keyword">from</span> <span class="c-string">"@fluid/engine"</span>;
+<span class="c-keyword">import</span> {
+  createDbConnection,
+  createPgCacheAdapter,
+  createPgProfileStore,
+  createPgUsageTracker,
+} <span class="c-keyword">from</span> <span class="c-string">"@fluid/db"</span>;
+<span class="c-keyword">import</span> { createContextEnricher, createRefreshPolicy } <span class="c-keyword">from</span> <span class="c-string">"@fluid/telemetry"</span>;
+
+<span class="c-keyword">let</span> engine: <span class="c-type">ReturnType</span>&lt;<span class="c-keyword">typeof</span> createEngine&gt; | <span class="c-keyword">null</span> = <span class="c-keyword">null</span>;
+
+<span class="c-keyword">export function</span> <span class="c-func">getEngine</span>() {
+  <span class="c-keyword">if</span> (engine) <span class="c-keyword">return</span> engine;
+
+  <span class="c-keyword">const</span> db = createDbConnection(process.env.DATABASE_URL!);
+
+  engine = createEngine({
+    <span class="c-comment">// Pick your LLM provider</span>
+    <span class="c-attr">provider</span>: createGeminiProvider(process.env.GEMINI_API_KEY!),
+
+    <span class="c-comment">// Postgres-backed adapters (swap for in-memory in dev)</span>
+    <span class="c-attr">cache</span>:          createPgCacheAdapter(db),
+    <span class="c-attr">profileStore</span>:   createPgProfileStore(db),
+    <span class="c-attr">usageTracker</span>:   createPgUsageTracker(db),
+
+    <span class="c-comment">// Optional: telemetry enrichment</span>
+    <span class="c-attr">contextEnricher</span>: createContextEnricher(),
+    <span class="c-attr">refreshPolicy</span>:  createRefreshPolicy(),
+  });
+
+  <span class="c-keyword">return</span> engine;
+}</pre>
+          </div>
+        </div>
+
+        <div class="callout callout-tip">
+          <div class="callout-title">💡 Tip</div>
+          <p>For local development without a database, omit the Postgres adapters — Fluid falls back to in-memory stores automatically. Just pass <code>provider</code> and you're good.</p>
+        </div>
+
+        <h3>Environment Variables</h3>
+        <div class="code-window">
+          <div class="code-header">
+            <span class="code-filename"><span class="file-icon">◆</span> .env.local</span>
+            <span class="code-lang">env</span>
+          </div>
+          <div class="code-body">
+<pre><span class="c-comment"># LLM provider (pick one)</span>
+GEMINI_API_KEY=your-google-ai-studio-key
+<span class="c-comment"># ANTHROPIC_API_KEY=sk-ant-...</span>
+
+<span class="c-comment"># Database (required for prod, optional for dev)</span>
+DATABASE_URL=postgresql://user:pass@host/db?sslmode=require</pre>
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             STAGE 4: API Routes
+             ═══════════════════════════════════════════════════════════ -->
+        <div class="stage-header" id="stage-4">
+          <span class="stage-badge green">04</span>
+          <span class="stage-title">Create API Routes</span>
+        </div>
+        <p class="stage-desc">Wire up Next.js API routes that your frontend will call. At minimum you need <code>/api/generate</code> and <code>/api/chat</code>.</p>
+
+        <h3>/api/generate — Intent → IR</h3>
+
+        <div class="code-window">
+          <div class="code-header">
+            <span class="code-filename"><span class="file-icon">◆</span> src/app/api/generate/route.ts</span>
+            <span class="code-lang">TypeScript</span>
+          </div>
+          <div class="code-body">
+<pre><span class="c-keyword">import</span> { NextRequest, NextResponse } <span class="c-keyword">from</span> <span class="c-string">"next/server"</span>;
+<span class="c-keyword">import</span> { getEngine } <span class="c-keyword">from</span> <span class="c-string">"@/lib/engine"</span>;
+<span class="c-keyword">import</span> { crmSchema } <span class="c-keyword">from</span> <span class="c-string">"@/schemas/crm.fluid"</span>;
+
+<span class="c-keyword">export async function</span> <span class="c-func">POST</span>(req: NextRequest) {
+  <span class="c-keyword">const</span> { intent, userId, learn } = <span class="c-keyword">await</span> req.json();
+  <span class="c-keyword">const</span> engine = getEngine();
+
+  <span class="c-comment">// Rate limit by IP</span>
+  <span class="c-keyword">const</span> ip = req.headers.get(<span class="c-string">"x-forwarded-for"</span>) ?? <span class="c-string">"unknown"</span>;
+  <span class="c-keyword">const</span> limit = <span class="c-keyword">await</span> engine.checkRateLimit(<span class="c-string">`gen:</span>${ip}<span class="c-string">`</span>);
+  <span class="c-keyword">if</span> (!limit.ok) <span class="c-keyword">return</span> NextResponse.json(
+    { error: <span class="c-string">"Rate limited"</span> }, { status: <span class="c-num">429</span> }
+  );
+
+  <span class="c-comment">// Generate or refine (with learning)</span>
+  <span class="c-keyword">const</span> result = learn
+    ? <span class="c-keyword">await</span> engine.refine({ schema: crmSchema, userId, intent })
+    : <span class="c-keyword">await</span> engine.generate({ schema: crmSchema, intent });
+
+  <span class="c-keyword">return</span> NextResponse.json(result);
+}</pre>
+          </div>
+        </div>
+
+        <h3>/api/chat — Conversational IR Patching</h3>
+
+        <div class="code-window">
+          <div class="code-header">
+            <span class="code-filename"><span class="file-icon">◆</span> src/app/api/chat/route.ts</span>
+            <span class="code-lang">TypeScript</span>
+          </div>
+          <div class="code-body">
+<pre><span class="c-keyword">import</span> { NextRequest, NextResponse } <span class="c-keyword">from</span> <span class="c-string">"next/server"</span>;
+<span class="c-keyword">import</span> { getEngine } <span class="c-keyword">from</span> <span class="c-string">"@/lib/engine"</span>;
+<span class="c-keyword">import</span> { crmSchema } <span class="c-keyword">from</span> <span class="c-string">"@/schemas/crm.fluid"</span>;
+
+<span class="c-keyword">export async function</span> <span class="c-func">POST</span>(req: NextRequest) {
+  <span class="c-keyword">const</span> { message, currentIR, userId, schemaName } = <span class="c-keyword">await</span> req.json();
+
+  <span class="c-keyword">if</span> (!currentIR) <span class="c-keyword">return</span> NextResponse.json(
+    { reply: <span class="c-string">"Generate a UI first."</span> }, { status: <span class="c-num">400</span> }
+  );
+
+  <span class="c-keyword">const</span> engine = getEngine();
+  <span class="c-keyword">const</span> result = <span class="c-keyword">await</span> engine.patch({
+    schema: crmSchema,
+    currentIR,
+    message,
+    userId,
+  });
+
+  <span class="c-keyword">return</span> NextResponse.json({
+    reply:         result.explanation,
+    canApply:      result.applied,
+    newIR:         result.ir,
+    newSnapshotId: result.snapshotId,
+    newVersion:    result.version,
+  });
+}</pre>
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             STAGE 5: Render
+             ═══════════════════════════════════════════════════════════ -->
+        <div class="stage-header" id="stage-5">
+          <span class="stage-badge blue">05</span>
+          <span class="stage-title">Render the Generated UI</span>
+        </div>
+        <p class="stage-desc">Use <code>&lt;FluidView&gt;</code> to render any IR. It validates the IR with Zod, checks it against your schema, then recursively renders to React.</p>
+
+        <div class="code-window">
+          <div class="code-header">
+            <span class="code-filename"><span class="file-icon">◆</span> src/app/page.tsx</span>
+            <span class="code-lang">TypeScript</span>
+          </div>
+          <div class="code-body">
+<pre><span class="c-keyword">import</span> { FluidView } <span class="c-keyword">from</span> <span class="c-string">"@fluid/react"</span>;
+<span class="c-keyword">import</span> { crmSchema } <span class="c-keyword">from</span> <span class="c-string">"@/schemas/crm.fluid"</span>;
+
+<span class="c-keyword">export default async function</span> <span class="c-func">Page</span>() {
+  <span class="c-comment">// Fetch your data server-side</span>
+  <span class="c-keyword">const</span> data = {
+    deals:    <span class="c-keyword">await</span> fetchDeals(),
+    contacts: <span class="c-keyword">await</span> fetchContacts(),
+  };
+
+  <span class="c-comment">// Fetch or load a cached IR</span>
+  <span class="c-keyword">const</span> ir = <span class="c-keyword">await</span> getDefaultIR();
+
+  <span class="c-keyword">return</span> (
+    &lt;<span class="c-tag">FluidView</span>
+      <span class="c-attr">ir</span>={ir}
+      <span class="c-attr">data</span>={data}
+      <span class="c-attr">schema</span>={crmSchema}
+    /&gt;
+  );
+}</pre>
+          </div>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-title">ℹ Validation</div>
+          <p><code>FluidView</code> runs Zod validation + <code>checkIRAgainstSchema()</code> before rendering. If the IR references an undeclared entity or field, it shows an error instead of crashing.</p>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             STAGE 6: Chatbot
+             ═══════════════════════════════════════════════════════════ -->
+        <div class="stage-header" id="stage-6">
+          <span class="stage-badge pink">06</span>
+          <span class="stage-title">Add the Chatbot</span>
+        </div>
+        <p class="stage-desc">Drop in <code>&lt;FluidChat&gt;</code> to give users a floating chat widget that can modify the live UI. Users type natural language instructions and the IR updates in real time.</p>
+
+        <div class="code-window">
+          <div class="code-header">
+            <span class="code-filename"><span class="file-icon">◆</span> src/app/Dashboard.tsx</span>
+            <span class="code-lang">TypeScript</span>
+          </div>
+          <div class="code-body">
+<pre><span class="c-string">"use client"</span>;
+
+<span class="c-keyword">import</span> { useState } <span class="c-keyword">from</span> <span class="c-string">"react"</span>;
+<span class="c-keyword">import</span> { FluidView, FluidChat } <span class="c-keyword">from</span> <span class="c-string">"@fluid/react"</span>;
+<span class="c-keyword">import type</span> { FluidIR } <span class="c-keyword">from</span> <span class="c-string">"@fluid/core"</span>;
+
+<span class="c-keyword">export function</span> <span class="c-func">Dashboard</span>({ initialIR, data, schema }) {
+  <span class="c-keyword">const</span> [ir, setIR] = useState&lt;<span class="c-type">FluidIR</span>&gt;(initialIR);
+  <span class="c-keyword">const</span> [snapshotId, setSnapshotId] = useState&lt;string&gt;();
+
+  <span class="c-keyword">return</span> (
+    &lt;&gt;
+      <span class="c-comment">{/* The rendered UI */}</span>
+      &lt;<span class="c-tag">FluidView</span> <span class="c-attr">ir</span>={ir} <span class="c-attr">data</span>={data} <span class="c-attr">schema</span>={schema} /&gt;
+
+      <span class="c-comment">{/* Chat widget — bottom-right floating bubble */}</span>
+      &lt;<span class="c-tag">FluidChat</span>
+        <span class="c-attr">userId</span>={userId}
+        <span class="c-attr">schemaName</span>=<span class="c-string">"crm"</span>
+        <span class="c-attr">currentSnapshotId</span>={snapshotId}
+        <span class="c-attr">currentIR</span>={ir}               <span class="c-comment">// ← sends IR to server for patching</span>
+        <span class="c-attr">onIRChange</span>={(newIR, newSnapshotId, version) =&gt; {
+          setIR(newIR);
+          setSnapshotId(newSnapshotId);
+        }}
+      /&gt;
+    &lt;/&gt;
+  );
+}</pre>
+          </div>
+        </div>
+
+        <p>The chatbot supports:</p>
+        <ul>
+          <li><strong>Conversational patching</strong> — "Move activities above deals", "Show contacts as cards"</li>
+          <li><strong>Version history</strong> — Browse and revert to any previous snapshot</li>
+          <li><strong>AI suggestions</strong> — Proactive improvements based on usage telemetry</li>
+        </ul>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             STAGE 7: Telemetry
+             ═══════════════════════════════════════════════════════════ -->
+        <div class="stage-header" id="stage-7">
+          <span class="stage-badge green">07</span>
+          <span class="stage-title">Telemetry & Hooks</span>
+        </div>
+        <p class="stage-desc">Track how users interact with the generated UI and dispatch mutations from action buttons.</p>
+
+        <div class="code-window">
+          <div class="code-header">
+            <span class="code-filename"><span class="file-icon">◆</span> Telemetry + Mutations</span>
+            <span class="code-lang">TypeScript</span>
+          </div>
+          <div class="code-body">
+<pre><span class="c-keyword">import</span> { useFluidTelemetry, useMutations } <span class="c-keyword">from</span> <span class="c-string">"@fluid/react"</span>;
+
+<span class="c-comment">// Track clicks, views, scrolls — batched to /api/telemetry</span>
+useFluidTelemetry({
+  <span class="c-attr">userId</span>,
+  <span class="c-attr">schemaName</span>: <span class="c-string">"crm"</span>,
+  <span class="c-attr">irId</span>: currentIrId,
+  <span class="c-attr">endpoint</span>: <span class="c-string">"/api/telemetry"</span>,
+  <span class="c-attr">device</span>: window.innerWidth &lt; <span class="c-num">768</span> ? <span class="c-string">"mobile"</span> : <span class="c-string">"desktop"</span>,
+});
+
+<span class="c-comment">// Handle mutation actions from generated buttons</span>
+useMutations({
+  <span class="c-attr">endpoint</span>: <span class="c-string">"/api/mutate"</span>,
+  <span class="c-attr">onSuccess</span>: (mutation, args) =&gt; console.log(<span class="c-string">`Done:</span> ${mutation}<span class="c-string">`</span>),
+  <span class="c-attr">onError</span>:   (mutation, err)  =&gt; console.error(<span class="c-string">`Failed:</span> ${mutation}<span class="c-string">`</span>),
+});</pre>
+          </div>
+        </div>
+
+        <div class="callout callout-warn">
+          <div class="callout-title">⚠ Important</div>
+          <p>Telemetry requires a user profile in <code>fluid_user_profiles</code>. If you're using auto-generated user IDs, ensure your <code>/api/telemetry</code> route auto-creates profiles to prevent FK violations.</p>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             API Reference
+             ═══════════════════════════════════════════════════════════ -->
+        <h2 id="api-reference">API Reference</h2>
+
+        <h3>Engine Methods</h3>
+        <table class="docs-table">
+          <thead>
+            <tr><th>Method</th><th>Purpose</th><th>State</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>engine.generate()</code></td><td>Stateless IR generation from intent</td><td>No profile read/write</td></tr>
+            <tr><td><code>engine.refine()</code></td><td>Learning generation — reads/writes user profile</td><td>Reads + writes ProfileStore</td></tr>
+            <tr><td><code>engine.patch()</code></td><td>Conversational IR modification</td><td>Takes currentIR + message</td></tr>
+            <tr><td><code>engine.checkRateLimit()</code></td><td>Sliding-window rate limiting</td><td>In-memory or distributed</td></tr>
+            <tr><td><code>engine.checkRefresh()</code></td><td>Should this user's IR be regenerated?</td><td>Uses RefreshPolicy</td></tr>
+          </tbody>
+        </table>
+
+        <h3>React Components & Hooks</h3>
+        <table class="docs-table">
+          <thead>
+            <tr><th>Export</th><th>Type</th><th>Purpose</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>&lt;FluidView&gt;</code></td><td>Component</td><td>Renders IR → React tree with validation</td></tr>
+            <tr><td><code>&lt;FluidChat&gt;</code></td><td>Component</td><td>Floating chatbot widget</td></tr>
+            <tr><td><code>useFluidChat()</code></td><td>Hook</td><td>Chat state, messages, suggestions, revert</td></tr>
+            <tr><td><code>useFluidTelemetry()</code></td><td>Hook</td><td>Batched usage event tracking</td></tr>
+            <tr><td><code>useMutations()</code></td><td>Hook</td><td>Action dispatch for generated buttons</td></tr>
+            <tr><td><code>useFluidIR()</code></td><td>Hook</td><td>Client-side IR fetching with AbortController</td></tr>
+            <tr><td><code>fetchIR()</code></td><td>Function</td><td>Typed fetch wrapper for /api/generate</td></tr>
+          </tbody>
+        </table>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             LLM Providers
+             ═══════════════════════════════════════════════════════════ -->
+        <h2 id="providers">LLM Providers</h2>
+        <p>Fluid ships with two providers. Both implement the same <code>LLMProvider</code> interface — swap them without changing any other code.</p>
+
+        <table class="docs-table">
+          <thead>
+            <tr><th>Provider</th><th>Model</th><th>Factory</th><th>Env Var</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Anthropic</strong></td><td>Claude Opus 4.7</td><td><code>createAnthropicProvider(key)</code></td><td><code>ANTHROPIC_API_KEY</code></td></tr>
+            <tr><td><strong>Gemini</strong></td><td>Gemini 2.0 Flash</td><td><code>createGeminiProvider(key)</code></td><td><code>GEMINI_API_KEY</code></td></tr>
+          </tbody>
+        </table>
+
+        <h3>Adding a Custom Provider</h3>
+        <div class="code-window">
+          <div class="code-header">
+            <span class="code-filename"><span class="file-icon">◆</span> my-provider.ts</span>
+            <span class="code-lang">TypeScript</span>
+          </div>
+          <div class="code-body">
+<pre><span class="c-keyword">import type</span> { LLMProvider, GenerateOptions, GenerateResult } <span class="c-keyword">from</span> <span class="c-string">"@fluid/engine"</span>;
+
+<span class="c-keyword">export class</span> <span class="c-type">MyProvider</span> <span class="c-keyword">implements</span> <span class="c-type">LLMProvider</span> {
+  <span class="c-attr">readonly</span> name = <span class="c-string">"my-llm"</span>;
+
+  <span class="c-keyword">async</span> <span class="c-func">generate</span>(opts: <span class="c-type">GenerateOptions</span>): <span class="c-type">Promise</span>&lt;<span class="c-type">GenerateResult</span>&gt; {
+    <span class="c-comment">// Call your LLM, return { text, usage, model, provider }</span>
+  }
+}
+
+<span class="c-comment">// Then pass to engine:</span>
+createEngine({ <span class="c-attr">provider</span>: <span class="c-keyword">new</span> <span class="c-type">MyProvider</span>() });</pre>
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             Database
+             ═══════════════════════════════════════════════════════════ -->
+        <h2 id="database">Database Setup</h2>
+        <p><code>@fluid/db</code> uses Drizzle ORM and creates <code>fluid_*</code> namespaced tables that won't collide with your app's tables.</p>
+
+        <div class="code-window">
+          <div class="code-header">
+            <span class="code-filename"><span class="file-icon">$</span> terminal</span>
+            <span class="code-lang">bash</span>
+          </div>
+          <div class="code-body">
+<pre><span class="c-comment"># Push the Drizzle schema to your Postgres</span>
+cd packages/fluid-db && npx drizzle-kit push</pre>
+          </div>
+        </div>
+
+        <h3>Tables Created</h3>
+        <table class="docs-table">
+          <thead>
+            <tr><th>Table</th><th>Purpose</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>fluid_user_profiles</code></td><td>Intent history per user (bounded list)</td></tr>
+            <tr><td><code>fluid_ir_cache</code></td><td>Validated IR cache (keyed by schema + intent hash)</td></tr>
+            <tr><td><code>fluid_usage_events</code></td><td>Click/view/scroll telemetry events</td></tr>
+            <tr><td><code>fluid_snapshots</code></td><td>IR version chain (generate → patch → revert)</td></tr>
+            <tr><td><code>fluid_chat_messages</code></td><td>Chat conversation history</td></tr>
+            <tr><td><code>fluid_suggestions</code></td><td>AI-generated improvement suggestions</td></tr>
+          </tbody>
+        </table>
+
+        <div class="callout callout-tip">
+          <div class="callout-title">💡 No DB for dev</div>
+          <p>All adapters have in-memory defaults. You don't need a database for local development — profiles and cache will simply reset on server restart.</p>
+        </div>
+
+        <hr>
+
+        <p style="text-align: center; color: var(--fg-muted); font-size: 0.85rem; margin-top: 48px;">
+          Built with Fluid · <a href="index.html" style="color: var(--accent-blue);">Back to Home</a>
+        </p>
+
+      </main>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         Sidebar Active Link Tracking
+         ══════════════════════════════════════════════════════════════ -->
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const links = document.querySelectorAll('.sidebar-link');
+        const sections = [];
+
+        links.forEach(link => {
+          const href = link.getAttribute('href');
+          if (href && href.startsWith('#')) {
+            const section = document.getElementById(href.slice(1));
+            if (section) sections.push({ link, section });
+          }
+        });
+
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              links.forEach(l => l.classList.remove('active'));
+              const match = sections.find(s => s.section === entry.target);
+              if (match) match.link.classList.add('active');
+            }
+          });
+        }, {
+          rootMargin: '-80px 0px -60% 0px',
+          threshold: 0
+        });
+
+        sections.forEach(s => observer.observe(s.section));
+      });
+    </script>
+  </body>
+</html>
